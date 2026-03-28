@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeDocument } from "@/lib/ocr/azure-doc-intel";
+import { analyzeTaxDocument, analyzeDocument } from "@/lib/ocr/azure-doc-intel";
 import { classifyDocument } from "@/lib/ai/document-classifier";
 import { getOpenRouterClient, MODELS } from "@/lib/ai/openrouter";
 
@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const documentId = (formData.get("documentId") as string) || crypto.randomUUID();
+    const documentTypeHint = (formData.get("documentType") as string) || "";
 
     // If file is provided, do real OCR processing
     if (file) {
@@ -15,31 +16,49 @@ export async function POST(req: NextRequest) {
       const buffer = await file.arrayBuffer();
       const contentType = file.type || "application/pdf";
 
-      // Step 1: OCR with Azure Document Intelligence
+      // Step 1: Determine document type from hint or filename
+      const detectedType = documentTypeHint || inferDocType(file.name);
+      const isSpecializedType = ["w2", "1099-nec", "1099-int", "1099-div", "1099-misc", "1099-r", "1099-k", "1099-b", "1098", "invoice", "receipt"].includes(detectedType);
+
+      // Step 2: OCR with Azure Document Intelligence
+      // Use specialized model (prebuilt-tax.us.w2, etc.) for known tax forms
+      // Falls back to general layout model
       let ocrText = "";
       let ocrConfidence = 0;
       let pageCount = 0;
+      let extractedFields: Array<{ name: string; value: string; confidence: number }> = [];
 
       try {
-        const ocrResult = await analyzeDocument(buffer, contentType);
-        ocrText = ocrResult.text;
-        ocrConfidence = ocrResult.confidence;
-        pageCount = ocrResult.pages;
+        if (isSpecializedType) {
+          // Use specialized Azure model for W-2, 1099, etc.
+          const taxResult = await analyzeTaxDocument(buffer, contentType, detectedType);
+          ocrText = taxResult.ocrText;
+          ocrConfidence = taxResult.confidence;
+          pageCount = taxResult.pages;
+          extractedFields = taxResult.fields; // Pre-extracted named fields!
+          console.log(`Used Azure model: ${taxResult.modelUsed} — extracted ${taxResult.fields.length} fields`);
+        } else {
+          // General layout model
+          const ocrResult = await analyzeDocument(buffer, contentType);
+          ocrText = ocrResult.text;
+          ocrConfidence = ocrResult.confidence;
+          pageCount = ocrResult.pages;
+        }
       } catch (ocrError) {
-        console.error("OCR failed, using filename fallback:", ocrError);
+        console.error("Azure OCR failed, using filename fallback:", ocrError);
         ocrText = `Document: ${file.name}`;
         ocrConfidence = 0.5;
       }
 
-      // Step 2: AI Classification
+      // Step 3: AI Classification (skip if we already know the type)
       let classification = {
-        documentType: inferDocType(file.name),
-        confidence: 0.8,
+        documentType: detectedType,
+        confidence: isSpecializedType ? 0.99 : 0.8,
         taxYear: "2024" as string | null,
         description: file.name,
       };
 
-      if (ocrText.length > 50 && process.env.OPENROUTER_API_KEY) {
+      if (!isSpecializedType && ocrText.length > 50 && process.env.OPENROUTER_API_KEY) {
         try {
           classification = await classifyDocument(ocrText);
         } catch (classifyError) {
@@ -47,14 +66,12 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Step 3: AI Data Extraction
-      let extractedFields: Array<{ name: string; value: string; confidence: number }> = [];
-
-      if (ocrText.length > 50 && process.env.OPENROUTER_API_KEY) {
+      // Step 4: AI Data Extraction (only if Azure didn't already extract fields)
+      if (extractedFields.length === 0 && ocrText.length > 50 && process.env.OPENROUTER_API_KEY) {
         try {
           extractedFields = await extractTaxData(ocrText, classification.documentType);
         } catch (extractError) {
-          console.error("Extraction failed:", extractError);
+          console.error("AI extraction failed:", extractError);
         }
       }
 

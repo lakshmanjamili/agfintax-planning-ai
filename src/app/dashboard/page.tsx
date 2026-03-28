@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -16,7 +16,9 @@ import {
   Search as SearchIcon,
   Calendar,
   ArrowUpRight,
+  Sparkles,
 } from "lucide-react";
+import { getPlan, getDocuments, getRecommendedDocuments, type SavedPlan } from "@/lib/tax/plan-store";
 
 /* ─── animation variants ─── */
 const fadeIn = {
@@ -283,6 +285,18 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firstName = user?.firstName || "there";
   const [timeFilter, setTimeFilter] = useState<"12M" | "6M" | "3M">("12M");
+  const [plan, setPlan] = useState<SavedPlan | null>(null);
+  const [docCount, setDocCount] = useState(0);
+
+  useEffect(() => {
+    setPlan(getPlan());
+    setDocCount(getDocuments().length);
+  }, []);
+
+  const recommendedDocs = getRecommendedDocuments(plan);
+  const potentialSavings = plan ? plan.totalSavings : 47250;
+  const strategyCount = plan ? plan.strategies.length : 0;
+  const formattedSavings = `$${potentialSavings.toLocaleString()}`;
 
   return (
     <div className="space-y-8">
@@ -311,9 +325,9 @@ export default function DashboardPage() {
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
                 Potential Savings
               </p>
-              <p className="mt-2 text-3xl font-bold text-white">$47,250</p>
+              <p className="mt-2 text-3xl font-bold text-white">{formattedSavings}</p>
               <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                +12% vs LY
+                {plan ? "From Smart Plan" : "+12% vs LY"}
               </span>
             </div>
             <div className="rounded-xl bg-orange-500/10 p-3">
@@ -329,9 +343,9 @@ export default function DashboardPage() {
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
                 Documents
               </p>
-              <p className="mt-2 text-3xl font-bold text-white">12</p>
+              <p className="mt-2 text-3xl font-bold text-white">{docCount}</p>
               <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-400">
-                3 new this week
+                {docCount === 0 ? "Upload to get started" : `${docCount} uploaded`}
               </span>
             </div>
             <div className="rounded-xl bg-blue-500/10 p-3">
@@ -347,9 +361,9 @@ export default function DashboardPage() {
               <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
                 Strategies
               </p>
-              <p className="mt-2 text-3xl font-bold text-white">15</p>
+              <p className="mt-2 text-3xl font-bold text-white">{strategyCount}</p>
               <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-violet-400">
-                5 recommendations
+                {plan ? `${strategyCount} personalized` : "Run Smart Plan first"}
               </span>
             </div>
             <div className="rounded-xl bg-violet-500/10 p-3">
@@ -372,6 +386,90 @@ export default function DashboardPage() {
             </div>
             <ProgressRing value={85} max={100} />
           </div>
+        </GlassPanel>
+      </motion.div>
+
+      {/* ─── Smart Plan CTA (if no plan) ─── */}
+      {!plan && (
+        <motion.div initial="hidden" animate="visible" custom={1.5} variants={fadeIn}>
+          <Link href="/dashboard/smart-plan">
+            <div className="group relative overflow-hidden rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-600/10 via-[rgba(27,27,32,0.8)] to-orange-400/10 p-6 transition-all duration-300 hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-900/20">
+              <div className="flex items-center gap-5">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-600 to-orange-400 shadow-lg shadow-orange-900/30">
+                  <Sparkles className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white">Start Your Smart Plan</h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Answer a few questions and our AI will build a personalized tax strategy with estimated savings.
+                  </p>
+                </div>
+                <ArrowUpRight className="h-6 w-6 text-orange-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      )}
+
+      {/* ─── Required Documents ─── */}
+      <motion.div initial="hidden" animate="visible" custom={1.8} variants={fadeIn}>
+        <GlassPanel>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">
+              {plan ? "Required Documents for Your Plan" : "Documents You May Need"}
+            </h3>
+            <Link
+              href="/dashboard/documents"
+              className="flex items-center gap-1 text-sm font-medium text-orange-400 transition-colors hover:text-orange-300"
+            >
+              Upload Documents <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {recommendedDocs.slice(0, 6).map((doc) => (
+              <div
+                key={doc.type}
+                className="flex items-start gap-3 rounded-xl border border-white/[0.05] bg-[rgba(31,31,37,0.5)] p-4"
+              >
+                <div className={`mt-0.5 rounded-lg p-2 ${
+                  doc.priority === "required"
+                    ? "bg-orange-500/10"
+                    : doc.priority === "recommended"
+                    ? "bg-blue-500/10"
+                    : "bg-slate-500/10"
+                }`}>
+                  <FileText className={`h-4 w-4 ${
+                    doc.priority === "required"
+                      ? "text-orange-400"
+                      : doc.priority === "recommended"
+                      ? "text-blue-400"
+                      : "text-slate-400"
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-200">{doc.label}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 truncate">{doc.description}</p>
+                  <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                    doc.priority === "required"
+                      ? "bg-orange-500/10 text-orange-400"
+                      : doc.priority === "recommended"
+                      ? "bg-blue-500/10 text-blue-400"
+                      : "bg-slate-500/10 text-slate-400"
+                  }`}>
+                    {doc.priority}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {recommendedDocs.length > 6 && (
+            <p className="mt-3 text-center text-xs text-slate-500">
+              +{recommendedDocs.length - 6} more documents recommended.{" "}
+              <Link href="/dashboard/documents" className="text-orange-400 hover:text-orange-300">
+                View all
+              </Link>
+            </p>
+          )}
         </GlassPanel>
       </motion.div>
 

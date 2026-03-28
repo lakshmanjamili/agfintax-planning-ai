@@ -1,6 +1,16 @@
+// =============================================================================
+// Azure Document Intelligence — Tax Document Processing
+// =============================================================================
+// Uses specialized prebuilt models for tax forms (W-2, 1099, invoices)
+// Falls back to general layout model for unrecognized documents
+
 const ENDPOINT = process.env.AZURE_DOCINTEL_ENDPOINT || "";
 const API_KEY = process.env.AZURE_DOCINTEL_KEY || "";
 const API_VERSION = process.env.AZURE_DOCINTEL_API_VERSION || "2024-02-29-preview";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 export interface OcrResult {
   text: string;
@@ -13,6 +23,112 @@ export interface OcrResult {
   }>;
 }
 
+export interface TaxDocumentResult {
+  documentType: string;
+  modelUsed: string;
+  ocrText: string;
+  confidence: number;
+  pages: number;
+  fields: Array<{ name: string; value: string; confidence: number }>;
+  tables: OcrResult["tables"];
+  rawAnalyzeResult?: Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
+// Model Selection — picks the best Azure model for each document type
+// ---------------------------------------------------------------------------
+
+// Azure Document Intelligence prebuilt models for tax documents
+const TAX_DOCUMENT_MODELS: Record<string, string> = {
+  // Prebuilt specialized models
+  "w2":              "prebuilt-tax.us.w2",
+  "1099-nec":        "prebuilt-tax.us.1099NEC",  // Available in preview
+  "1099-int":        "prebuilt-tax.us.1099Int",
+  "1099-div":        "prebuilt-tax.us.1099Div",
+  "1099-misc":       "prebuilt-tax.us.1099MISC",
+  "1099-r":          "prebuilt-tax.us.1099R",
+  "1099-k":          "prebuilt-tax.us.1099K",
+  "1099-b":          "prebuilt-tax.us.1099B",
+  "1098":            "prebuilt-tax.us.1098",
+  "1098-e":          "prebuilt-tax.us.1098E",
+  "1098-t":          "prebuilt-tax.us.1098T",
+  "invoice":         "prebuilt-invoice",
+  "receipt":         "prebuilt-receipt",
+  "id":              "prebuilt-idDocument",
+  // Fallback for everything else
+  "default":         "prebuilt-layout",
+};
+
+/**
+ * Select the best Azure model based on document type hint
+ */
+function selectModel(documentType: string): string {
+  const type = documentType.toLowerCase().trim();
+
+  // Direct match
+  if (TAX_DOCUMENT_MODELS[type]) return TAX_DOCUMENT_MODELS[type];
+
+  // Fuzzy match
+  if (type.includes("w-2") || type.includes("w2")) return TAX_DOCUMENT_MODELS["w2"];
+  if (type.includes("1099-nec") || type.includes("1099nec")) return TAX_DOCUMENT_MODELS["1099-nec"];
+  if (type.includes("1099-int")) return TAX_DOCUMENT_MODELS["1099-int"];
+  if (type.includes("1099-div")) return TAX_DOCUMENT_MODELS["1099-div"];
+  if (type.includes("1099-misc")) return TAX_DOCUMENT_MODELS["1099-misc"];
+  if (type.includes("1099-r")) return TAX_DOCUMENT_MODELS["1099-r"];
+  if (type.includes("1099-k")) return TAX_DOCUMENT_MODELS["1099-k"];
+  if (type.includes("1099-b")) return TAX_DOCUMENT_MODELS["1099-b"];
+  if (type.includes("1098-e")) return TAX_DOCUMENT_MODELS["1098-e"];
+  if (type.includes("1098-t")) return TAX_DOCUMENT_MODELS["1098-t"];
+  if (type.includes("1098")) return TAX_DOCUMENT_MODELS["1098"];
+  if (type.includes("1099")) return TAX_DOCUMENT_MODELS["1099-nec"]; // Default 1099
+  if (type.includes("invoice")) return TAX_DOCUMENT_MODELS["invoice"];
+  if (type.includes("receipt")) return TAX_DOCUMENT_MODELS["receipt"];
+
+  return TAX_DOCUMENT_MODELS["default"];
+}
+
+// ---------------------------------------------------------------------------
+// Core Analysis Functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Analyze a tax document using the best available Azure model
+ */
+export async function analyzeTaxDocument(
+  fileBuffer: ArrayBuffer,
+  contentType: string,
+  documentTypeHint?: string
+): Promise<TaxDocumentResult> {
+  if (!ENDPOINT || !API_KEY) {
+    throw new Error("Azure Document Intelligence credentials not configured");
+  }
+
+  const model = selectModel(documentTypeHint || "default");
+  const baseUrl = ENDPOINT.replace(/\/$/, "");
+
+  // Try specialized model first, fall back to layout
+  let analyzeResult: Record<string, unknown>;
+  let modelUsed = model;
+
+  try {
+    analyzeResult = await runAnalysis(baseUrl, model, fileBuffer, contentType);
+  } catch (err) {
+    // If specialized model fails, fall back to general layout
+    if (model !== "prebuilt-layout") {
+      console.warn(`Specialized model ${model} failed, falling back to prebuilt-layout:`, err);
+      modelUsed = "prebuilt-layout";
+      analyzeResult = await runAnalysis(baseUrl, "prebuilt-layout", fileBuffer, contentType);
+    } else {
+      throw err;
+    }
+  }
+
+  return parseResult(analyzeResult, modelUsed, documentTypeHint || "unknown");
+}
+
+/**
+ * General layout analysis (backward compatible)
+ */
 export async function analyzeDocument(
   fileBuffer: ArrayBuffer,
   contentType: string
@@ -22,9 +138,23 @@ export async function analyzeDocument(
   }
 
   const baseUrl = ENDPOINT.replace(/\/$/, "");
-  const analyzeUrl = `${baseUrl}/documentintelligence/documentModels/prebuilt-layout:analyze?api-version=${API_VERSION}&outputContentFormat=markdown`;
+  const result = await runAnalysis(baseUrl, "prebuilt-layout", fileBuffer, contentType);
+  return parseOcrResult(result);
+}
 
-  // Start analysis
+// ---------------------------------------------------------------------------
+// Internal Helpers
+// ---------------------------------------------------------------------------
+
+async function runAnalysis(
+  baseUrl: string,
+  model: string,
+  fileBuffer: ArrayBuffer,
+  contentType: string
+): Promise<Record<string, unknown>> {
+  const outputFormat = model === "prebuilt-layout" ? "&outputContentFormat=markdown" : "";
+  const analyzeUrl = `${baseUrl}/documentintelligence/documentModels/${model}:analyze?api-version=${API_VERSION}${outputFormat}`;
+
   const analyzeResponse = await fetch(analyzeUrl, {
     method: "POST",
     headers: {
@@ -36,7 +166,7 @@ export async function analyzeDocument(
 
   if (!analyzeResponse.ok) {
     const error = await analyzeResponse.text();
-    throw new Error(`Azure OCR analyze failed: ${analyzeResponse.status} - ${error}`);
+    throw new Error(`Azure analyze failed (${model}): ${analyzeResponse.status} - ${error}`);
   }
 
   const operationLocation = analyzeResponse.headers.get("operation-location");
@@ -44,9 +174,7 @@ export async function analyzeDocument(
     throw new Error("No operation-location header in Azure response");
   }
 
-  // Poll for results
-  const result = await pollForResult(operationLocation);
-  return parseAnalyzeResult(result);
+  return await pollForResult(operationLocation);
 }
 
 async function pollForResult(
@@ -59,33 +187,86 @@ async function pollForResult(
       headers: { "Ocp-Apim-Subscription-Key": API_KEY },
     });
 
-    if (!response.ok) {
-      throw new Error(`Poll failed: ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`Poll failed: ${response.status}`);
     const result = await response.json();
 
-    if (result.status === "succeeded") {
-      return result.analyzeResult;
-    }
+    if (result.status === "succeeded") return result.analyzeResult;
+    if (result.status === "failed") throw new Error(`Analysis failed: ${JSON.stringify(result.error)}`);
 
-    if (result.status === "failed") {
-      throw new Error(`Analysis failed: ${JSON.stringify(result.error)}`);
-    }
-
-    // Wait before next poll
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 
-  throw new Error("OCR polling timed out after 60 seconds");
+  throw new Error("OCR polling timed out");
 }
 
-function parseAnalyzeResult(analyzeResult: Record<string, unknown>): OcrResult {
+/**
+ * Parse result from specialized tax document model
+ * Extracts named fields (W-2 boxes, 1099 amounts, etc.)
+ */
+function parseResult(
+  analyzeResult: Record<string, unknown>,
+  modelUsed: string,
+  documentType: string
+): TaxDocumentResult {
+  const content = (analyzeResult.content as string) || "";
+  const pages = (analyzeResult.pages as Array<Record<string, unknown>>) || [];
+  const documents = (analyzeResult.documents as Array<Record<string, unknown>>) || [];
+  const tables = (analyzeResult.tables as Array<Record<string, unknown>>) || [];
+
+  // Extract structured fields from specialized models
+  const fields: Array<{ name: string; value: string; confidence: number }> = [];
+
+  for (const doc of documents) {
+    const docFields = (doc.fields as Record<string, Record<string, unknown>>) || {};
+    for (const [fieldName, fieldData] of Object.entries(docFields)) {
+      const value = extractFieldValue(fieldData);
+      const confidence = (fieldData.confidence as number) || 0;
+      if (value) {
+        fields.push({
+          name: formatFieldName(fieldName),
+          value,
+          confidence,
+        });
+      }
+    }
+  }
+
+  // Calculate overall confidence
+  let totalConfidence = 0;
+  let wordCount = 0;
+  for (const page of pages) {
+    const words = (page.words as Array<{ confidence: number }>) || [];
+    for (const word of words) {
+      totalConfidence += word.confidence || 0;
+      wordCount++;
+    }
+  }
+
+  return {
+    documentType,
+    modelUsed,
+    ocrText: content,
+    confidence: wordCount > 0 ? totalConfidence / wordCount : (fields.length > 0 ? 0.95 : 0),
+    pages: pages.length,
+    fields,
+    tables: tables.map((table) => ({
+      rows: (table.rowCount as number) || 0,
+      columns: (table.columnCount as number) || 0,
+      cells: ((table.cells as Array<Record<string, unknown>>) || []).map((cell) => ({
+        rowIndex: (cell.rowIndex as number) || 0,
+        columnIndex: (cell.columnIndex as number) || 0,
+        content: (cell.content as string) || "",
+      })),
+    })),
+    rawAnalyzeResult: analyzeResult,
+  };
+}
+
+function parseOcrResult(analyzeResult: Record<string, unknown>): OcrResult {
   const content = (analyzeResult.content as string) || "";
   const pages = (analyzeResult.pages as Array<Record<string, unknown>>) || [];
   const tables = (analyzeResult.tables as Array<Record<string, unknown>>) || [];
 
-  // Calculate average confidence from pages
   let totalConfidence = 0;
   let wordCount = 0;
   for (const page of pages) {
@@ -110,4 +291,41 @@ function parseAnalyzeResult(analyzeResult: Record<string, unknown>): OcrResult {
       })),
     })),
   };
+}
+
+/**
+ * Extract the display value from an Azure field object
+ */
+function extractFieldValue(field: Record<string, unknown>): string {
+  if (field.valueString) return field.valueString as string;
+  if (field.valueNumber !== undefined) return String(field.valueNumber);
+  if (field.valueCurrency) {
+    const currency = field.valueCurrency as { amount: number; currencySymbol?: string };
+    return `$${currency.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+  }
+  if (field.valueDate) return field.valueDate as string;
+  if (field.valueAddress) {
+    const addr = field.valueAddress as Record<string, string>;
+    return [addr.streetAddress, addr.city, addr.state, addr.postalCode].filter(Boolean).join(", ");
+  }
+  if (field.content) return field.content as string;
+  if (field.valueArray) {
+    return (field.valueArray as Array<Record<string, unknown>>)
+      .map((item) => extractFieldValue(item))
+      .filter(Boolean)
+      .join("; ");
+  }
+  return "";
+}
+
+/**
+ * Format camelCase/PascalCase field names to readable labels
+ * e.g., "employerNameAddress" → "Employer Name Address"
+ */
+function formatFieldName(name: string): string {
+  return name
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (s) => s.toUpperCase())
+    .replace(/_/g, " ")
+    .trim();
 }
