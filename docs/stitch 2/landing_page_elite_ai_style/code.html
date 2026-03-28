@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgFinTax | The Financial Architect</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed-dim": "#ffb596",
+              "error": "#ffb4ab",
+              "surface-bright": "#39383e",
+              "on-primary-fixed-variant": "#7c2e00",
+              "surface-container-low": "#1b1b20",
+              "primary": "#ffb596",
+              "on-tertiary-container": "#008daa",
+              "surface-container-lowest": "#0e0e13",
+              "primary-fixed": "#ffdbcd",
+              "secondary-container": "#3b418f",
+              "surface-container-highest": "#35343a",
+              "outline-variant": "#464651",
+              "tertiary-fixed": "#b3ebff",
+              "on-secondary-fixed-variant": "#393e8c",
+              "surface-container": "#1f1f25",
+              "on-tertiary-fixed-variant": "#004e5f",
+              "tertiary-fixed-dim": "#4cd6fb",
+              "on-secondary": "#212675",
+              "on-tertiary": "#003642",
+              "on-primary": "#581e00",
+              "primary-container": "#300d00",
+              "surface-dim": "#131318",
+              "on-secondary-container": "#aeb2ff",
+              "on-background": "#e4e1e9",
+              "on-primary-fixed": "#360f00",
+              "on-tertiary-fixed": "#001f27",
+              "surface": "#131318",
+              "surface-tint": "#ffb596",
+              "error-container": "#93000a",
+              "on-error-container": "#ffdad6",
+              "secondary-fixed": "#e0e0ff",
+              "inverse-primary": "#a33e00",
+              "outline": "#908f9c",
+              "on-error": "#690005",
+              "on-secondary-fixed": "#070a61",
+              "tertiary-container": "#001b23",
+              "on-primary-container": "#dc5700",
+              "on-surface-variant": "#c7c5d3",
+              "secondary-fixed-dim": "#bfc2ff",
+              "surface-variant": "#35343a",
+              "inverse-surface": "#e4e1e9",
+              "inverse-on-surface": "#303036",
+              "background": "#131318",
+              "on-surface": "#e4e1e9",
+              "secondary": "#bfc2ff",
+              "surface-container-high": "#2a292f",
+              "tertiary": "#4cd6fb"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Plus Jakarta Sans"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #131318; color: #e4e1e9; }
+        .mesh-gradient {
+            background: radial-gradient(at 0% 0%, rgba(220, 87, 0, 0.15) 0px, transparent 50%),
+                        radial-gradient(at 100% 0%, rgba(76, 214, 251, 0.1) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(220, 87, 0, 0.1) 0px, transparent 50%),
+                        radial-gradient(at 0% 100%, rgba(59, 65, 143, 0.15) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(53, 52, 58, 0.4);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface selection:bg-primary/30 overflow-x-hidden">
+<!-- Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-xl flex justify-between items-center px-8 py-4 w-full font-['Plus_Jakarta_Sans'] tracking-tight shadow-[0_24px_48px_rgba(0,0,0,0.4)]">
+<div class="text-2xl font-bold tracking-tighter text-slate-100 flex items-center gap-2">
+<span class="w-8 h-8 rounded-lg bg-gradient-to-br from-on-primary-container to-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-surface text-lg" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</span>
+            AgFinTax
+        </div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-orange-500 font-semibold hover:text-orange-400 transition-colors duration-300" href="#">Solutions</a>
+<a class="text-slate-400 font-medium hover:text-orange-400 transition-colors duration-300" href="#">Platform</a>
+<a class="text-slate-400 font-medium hover:text-orange-400 transition-colors duration-300" href="#">Strategies</a>
+<a class="text-slate-400 font-medium hover:text-orange-400 transition-colors duration-300" href="#">Pricing</a>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-slate-400 font-medium hover:text-slate-100 transition-colors">Sign In</button>
+<button class="bg-gradient-to-r from-on-primary-container to-primary text-on-primary px-6 py-2.5 rounded-xl font-bold scale-95 active:scale-90 transition-transform shadow-lg shadow-on-primary-container/20">Get Started</button>
+</div>
+</nav>
+<main class="mesh-gradient pt-32 min-h-screen">
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center py-20">
+<div class="lg:col-span-7 space-y-8">
+<div class="inline-flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/20">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-bold tracking-widest text-on-surface-variant uppercase">AI Financial Protocol 2.0</span>
+</div>
+<h1 class="text-6xl md:text-8xl font-extrabold leading-[0.9] tracking-tighter">
+                    The <span class="text-transparent bg-clip-text bg-gradient-to-r from-on-primary-container to-primary">Financial</span> Architect.
+                </h1>
+<p class="text-xl text-on-surface-variant max-w-xl leading-relaxed">
+                    Engineered for high-net-worth entities and agricultural conglomerates. Our AI-driven infrastructure automates hyper-complex tax strategies and liquidity modeling with mathematical certainty.
+                </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="bg-gradient-to-r from-on-primary-container to-primary text-on-primary px-10 py-5 rounded-xl text-lg font-black tracking-tight shadow-[0_20px_40px_rgba(220,87,0,0.3)] hover:translate-y-[-2px] transition-all">
+                        Start Free Audit
+                    </button>
+<button class="glass-card text-on-surface px-10 py-5 rounded-xl text-lg font-bold border border-outline-variant/30 hover:bg-surface-variant/40 transition-all">
+                        View Demo
+                    </button>
+</div>
+<div class="flex items-center gap-12 pt-12 border-t border-outline-variant/10">
+<div>
+<div class="text-3xl font-bold text-on-surface">15k+</div>
+<div class="text-sm text-on-surface-variant">Global Enterprises</div>
+</div>
+<div>
+<div class="text-3xl font-bold text-on-surface">$2.4B</div>
+<div class="text-sm text-on-surface-variant">Capital Managed</div>
+</div>
+<div>
+<div class="text-3xl font-bold text-on-surface">99.9%</div>
+<div class="text-sm text-on-surface-variant">Audit Protection</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 relative">
+<!-- Floating Stats Cards -->
+<div class="glass-card p-8 rounded-3xl relative z-10 shadow-2xl border border-white/10 group">
+<div class="flex justify-between items-start mb-10">
+<div>
+<div class="text-on-surface-variant text-sm font-medium">Projected Annual Savings</div>
+<div class="text-5xl font-black tracking-tighter mt-1 text-primary">$47,250</div>
+</div>
+<span class="material-symbols-outlined text-4xl text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div class="space-y-4">
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-on-primary-container to-primary w-[78%]"></div>
+</div>
+<div class="flex justify-between text-xs font-bold text-on-surface-variant uppercase tracking-widest">
+<span>Optimization Progress</span>
+<span>78%</span>
+</div>
+</div>
+</div>
+<!-- Secondary Overlapping Card -->
+<div class="glass-card p-6 rounded-2xl absolute -bottom-10 -left-10 z-20 w-64 shadow-2xl border border-white/10">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">security</span>
+</div>
+<div>
+<div class="text-xs font-bold text-on-surface">Verified AI</div>
+<div class="text-[10px] text-on-surface-variant uppercase">Architecture SEC-v2</div>
+</div>
+</div>
+<div class="text-sm text-on-surface-variant leading-tight">
+                        Encrypted mathematical modeling active for tax year 2024.
+                    </div>
+</div>
+<!-- Abstract Decorative Element -->
+<div class="absolute -top-20 -right-20 w-80 h-80 bg-primary/20 rounded-full blur-[120px] -z-10"></div>
+</div>
+</section>
+<!-- Logo Cloud -->
+<section class="py-24 border-y border-outline-variant/10 bg-surface-container-lowest/30 backdrop-blur-sm">
+<div class="max-w-7xl mx-auto px-8">
+<p class="text-center text-on-surface-variant text-sm font-bold uppercase tracking-[0.4em] mb-12">Trusted by 15k+ Market Leaders</p>
+<div class="flex flex-wrap justify-center items-center gap-16 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+<img alt="Partner Logo" class="h-8 w-auto" data-alt="minimalist professional logo for a high-end fintech firm with clean geometric lines in white on dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl7tlK47V3pbvim2c6LmtJEodYDgbAFBp7SFBBNR0NGXCIuYK9-1uvagImmeo1ODnyMGtpShrua7r7uJ3ltQ9E89K_ORjEIvRxUt0mAcGjxh0-6DzI7Ylyfp9XhNU7GEefYmPvcZAS4PTzHLv5faI1pd4rIGYbGyJSpG3ifVz4RMEaoiqLef6t-sywo0AOaj3cKNVLiys0s9y25Mec_Cmi5jBiLD6rdt_X3Axcd2w2zIN-mZuHnF9Wi2YsZ_7O_0580jPNDEpt3vR_"/>
+<img alt="Partner Logo" class="h-8 w-auto" data-alt="minimalist corporate logo for a global logistics and agriculture technology company with bold modern typography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRSWj3APnM7dC6U0Xq0Cjoa5paiAUfv0MTpQW9yuQqWelW7hCFbajarmCxUz7hXmjbW5YEF7NkWesbPpihOowYPIeRcOm6vYA0uoegn9PgwcP8vqCeZSLuvS0Hqar5yDJORr_ysk8U5Xx_Hg_Z-leCNCEaZEkDQKlzjQxV2US9xLbDc_T_rQTzySkcvuhO0RJV9ydcadCpjzCluPWAPu4RuZVo6aD7S5vzVSFA2CVAjzib_2WY-YS5pd2gWfJPHVXXQy2aOkpYLM25"/>
+<img alt="Partner Logo" class="h-8 w-auto" data-alt="elegant architectural design firm logo with refined sans-serif characters in silver and gray tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXiVs08d7KqWcnK8qTKaTlvLYPizNtYqnqBNQXJNZb-wI2BWIoDdY8D5NZkVEMLDG_32K7At6PzKw87TOw3wBzvhnYaLxgm7ythM1VqkM-Gc0YJfyIjYOgBHuttetpdmkmcj8lUBOPzZNBnM102oLHLz8wI4beFqh31qK6g-PLTbSxsijn7nxaT2jYpnma1r5V-sY9UxYMzWetUhPWpZTXtw7eBg8N1z1Pr5YMCyDItUpGMad7yz4BB2WLLETi7k_HLHW0w2WtMIhM"/>
+<img alt="Partner Logo" class="h-8 w-auto" data-alt="sleek modern ai laboratory logo using minimalist abstract shapes and professional balanced spacing" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNOD2qqPpMfbzZGKOh4B0Dn6gMWcFO43Dh3EPamzbWdLyN9f5JF3JsdcDJW2lPzBCNRY_Ep2xTGFLKGa9hPN9WrgD_boJ97WSu_RjLwSbzB4yAAp2l6VRjKO5XQn81d63DieN_gsySLqfeDt3nmbBqGi7OaZmDeOxGPZqDtEO89Khe5mYGMdtVBlRuCCHUyE1lpZ1ym9swPRQcJvKmo245FrsuriVI-0p_1iKBLdR_Dg3a1TfjCamXuP2fqmlckyQ4ih9dTq4lkL6G"/>
+<img alt="Partner Logo" class="h-8 w-auto" data-alt="premium venture capital logo featuring high-contrast typography and sophisticated geometric emblem" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf486v2Lh_KH4rqH1O1D5NVVXmO0Y7mc0M5CwEf8EkDNGw_4mgVDrZOUSmyHxLywWCv6zUqZw4U9j2oL8kILr8ambbEhp6y18ZyfioJmkZ80saFKAVnnJv1ZvTiogphqp_fR61AAO44fcfPEerS3n6ZHOSTUgrdnaQ8YyIyUuStWyyoNwKcR8QTS2GSnKi51C8C9weQJVBHmmGbHRXHtq-d5TkZP6Cys58WvHaAA5NWG4NQEZgqHvIGirQoD1_IJYyINzs-g3pmT7L"/>
+</div>
+</div>
+</section>
+<!-- Features Grid -->
+<section class="max-w-7xl mx-auto px-8 py-32">
+<div class="mb-20 space-y-4">
+<h2 class="text-4xl md:text-5xl font-black tracking-tighter">Sophisticated <span class="text-primary">Capabilities</span></h2>
+<p class="text-on-surface-variant text-lg max-w-2xl">The most advanced financial engineering platform ever built for the modern economy.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="glass-card p-10 rounded-3xl group hover:bg-surface-container-highest transition-all duration-500 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">analytics</span>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-on-primary-container/10 flex items-center justify-center mb-8 border border-on-primary-container/20">
+<span class="material-symbols-outlined text-on-primary-container text-3xl" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<h3 class="text-2xl font-bold mb-4">Neural Tax Engine</h3>
+<p class="text-on-surface-variant leading-relaxed">Proprietary AI models that scan thousands of tax codes per second to identify fractional optimizations.</p>
+</div>
+<!-- Card 2 -->
+<div class="glass-card p-10 rounded-3xl group hover:bg-surface-container-highest transition-all duration-500 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-tertiary">account_balance_wallet</span>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-tertiary-container flex items-center justify-center mb-8 border border-tertiary/20">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+<h3 class="text-2xl font-bold mb-4">Liquidity Guard</h3>
+<p class="text-on-surface-variant leading-relaxed">Real-time cash flow structural analysis to maintain optimal operational capital across multiple entities.</p>
+</div>
+<!-- Card 3 -->
+<div class="glass-card p-10 rounded-3xl group hover:bg-surface-container-highest transition-all duration-500 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-secondary">verified_user</span>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center mb-8 border border-secondary/20">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<h3 class="text-2xl font-bold mb-4">Risk Architecture</h3>
+<p class="text-on-surface-variant leading-relaxed">Mathematical stress-testing of your entire financial structure against regulatory shifts and market volatility.</p>
+</div>
+<!-- Card 4 -->
+<div class="glass-card p-10 rounded-3xl group hover:bg-surface-container-highest transition-all duration-500 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">payments</span>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-primary-container flex items-center justify-center mb-8 border border-primary/20">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">savings</span>
+</div>
+<h3 class="text-2xl font-bold mb-4">Automated Yield</h3>
+<p class="text-on-surface-variant leading-relaxed">Algorithms that automatically re-route excess capital into high-yield, tax-sheltered investment instruments.</p>
+</div>
+<!-- Card 5 -->
+<div class="glass-card p-10 rounded-3xl group hover:bg-surface-container-highest transition-all duration-500 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-tertiary">shield_with_heart</span>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-tertiary-container flex items-center justify-center mb-8 border border-tertiary/20">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="font-variation-settings: 'FILL' 1;">rate_review</span>
+</div>
+<h3 class="text-2xl font-bold mb-4">Audit Immutability</h3>
+<p class="text-on-surface-variant leading-relaxed">Every transaction and optimization is recorded with cryptographically secure justification logs for IRS compliance.</p>
+</div>
+<!-- Card 6 -->
+<div class="glass-card p-10 rounded-3xl group hover:bg-surface-container-highest transition-all duration-500 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-on-surface-variant">terminal</span>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center mb-8 border border-outline/20">
+<span class="material-symbols-outlined text-on-surface text-3xl" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+</div>
+<h3 class="text-2xl font-bold mb-4">Multi-Entity Sync</h3>
+<p class="text-on-surface-variant leading-relaxed">Centralized oversight for complex holding structures, subsidiaries, and family offices in one unified architect view.</p>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="max-w-7xl mx-auto px-8 py-32">
+<div class="bg-gradient-to-br from-secondary-container/30 to-surface-container-lowest rounded-[40px] p-16 md:p-24 relative overflow-hidden border border-white/5">
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="relative z-10 max-w-3xl">
+<h2 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-8 leading-none">
+                        Ready to <span class="text-primary">re-engineer</span> your capital?
+                    </h2>
+<p class="text-xl text-on-surface-variant mb-12 leading-relaxed">
+                        Join the elite 1% of firms leveraging architectural financial intelligence. Your first comprehensive structural audit is complimentary.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-6">
+<button class="bg-primary text-on-primary px-12 py-6 rounded-2xl text-xl font-black tracking-tight shadow-xl hover:scale-105 active:scale-95 transition-all">
+                            Secure My Audit Now
+                        </button>
+<button class="glass-card text-on-surface px-12 py-6 rounded-2xl text-xl font-bold border border-outline-variant/30 hover:bg-white/5 transition-all">
+                            Speak to an Architect
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="bg-slate-950 dark:bg-[#131318] w-full py-12 px-8 mt-auto font-['Plus_Jakarta_Sans'] text-xs tracking-wide">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="space-y-4">
+<div class="font-bold text-slate-200 text-lg">AgFinTax</div>
+<p class="text-slate-500 max-w-xs">The world's most advanced AI-native financial architecture for high-stakes tax and capital strategy.</p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-3">
+<div class="font-bold text-slate-300 uppercase tracking-widest text-[10px]">Company</div>
+<a class="block text-slate-500 hover:text-orange-400 transition-colors" href="#">Legal</a>
+<a class="block text-slate-500 hover:text-orange-400 transition-colors" href="#">Privacy Policy</a>
+<a class="block text-slate-500 hover:text-orange-400 transition-colors" href="#">Terms of Service</a>
+</div>
+<div class="space-y-3">
+<div class="font-bold text-slate-300 uppercase tracking-widest text-[10px]">Support</div>
+<a class="block text-slate-500 hover:text-orange-400 transition-colors" href="#">Contact Support</a>
+<a class="block text-slate-500 hover:text-orange-400 transition-colors" href="#">Documentation</a>
+<a class="block text-slate-500 hover:text-orange-400 transition-colors" href="#">API Status</a>
+</div>
+</div>
+<div class="space-y-6">
+<div class="font-bold text-slate-300 uppercase tracking-widest text-[10px]">Newsletter</div>
+<div class="flex">
+<input class="bg-surface-container-lowest border-none rounded-l-lg text-sm w-full focus:ring-1 focus:ring-primary" placeholder="Email" type="email"/>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-r-lg">
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+<div class="text-slate-500 leading-tight">
+                    © 2024 AgFinTax. Built &amp; Powered by LoukriAI.com
+                </div>
+</div>
+</div>
+</footer>
+</body></html>

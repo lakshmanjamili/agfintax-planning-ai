@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed-dim": "#ffb596",
+              "error": "#ffb4ab",
+              "surface-bright": "#39383e",
+              "on-primary-fixed-variant": "#7c2e00",
+              "surface-container-low": "#1b1b20",
+              "primary": "#ffb596",
+              "on-tertiary-container": "#008daa",
+              "surface-container-lowest": "#0e0e13",
+              "primary-fixed": "#ffdbcd",
+              "secondary-container": "#3b418f",
+              "surface-container-highest": "#35343a",
+              "outline-variant": "#464651",
+              "tertiary-fixed": "#b3ebff",
+              "on-secondary-fixed-variant": "#393e8c",
+              "surface-container": "#1f1f25",
+              "on-tertiary-fixed-variant": "#004e5f",
+              "tertiary-fixed-dim": "#4cd6fb",
+              "on-secondary": "#212675",
+              "on-tertiary": "#003642",
+              "on-primary": "#581e00",
+              "primary-container": "#300d00",
+              "surface-dim": "#131318",
+              "on-secondary-container": "#aeb2ff",
+              "on-background": "#e4e1e9",
+              "on-primary-fixed": "#360f00",
+              "on-tertiary-fixed": "#001f27",
+              "surface": "#131318",
+              "surface-tint": "#ffb596",
+              "error-container": "#93000a",
+              "on-error-container": "#ffdad6",
+              "secondary-fixed": "#e0e0ff",
+              "inverse-primary": "#a33e00",
+              "outline": "#908f9c",
+              "on-error": "#690005",
+              "on-secondary-fixed": "#070a61",
+              "tertiary-container": "#001b23",
+              "on-primary-container": "#dc5700",
+              "on-surface-variant": "#c7c5d3",
+              "secondary-fixed-dim": "#bfc2ff",
+              "surface-variant": "#35343a",
+              "inverse-surface": "#e4e1e9",
+              "inverse-on-surface": "#303036",
+              "background": "#131318",
+              "on-surface": "#e4e1e9",
+              "secondary": "#bfc2ff",
+              "surface-container-high": "#2a292f",
+              "tertiary": "#4cd6fb"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Plus Jakarta Sans"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card {
+            background: rgba(31, 31, 37, 0.6);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mesh-glow {
+            background: radial-gradient(circle at 50% 50%, rgba(220, 87, 0, 0.15) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary/30">
+<!-- Side Navigation Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-900 dark:bg-[#131318] flex flex-col py-6 px-4 z-50">
+<div class="mb-10 px-4">
+<h1 class="text-xl font-black text-slate-50 tracking-tighter">AgFinTax</h1>
+<p class="text-[10px] uppercase tracking-widest text-orange-500 font-bold mt-1">AI Financial Architect</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">smart_toy</span> Tax Chat
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">description</span> Documents
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">insights</span> Strategies
+            </a>
+<a class="flex items-center gap-3 bg-gradient-to-r from-orange-600 to-orange-400 text-white rounded-lg px-4 py-3 shadow-lg shadow-orange-900/20 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">savings</span> Savings
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">rate_review</span> Review
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">person</span> Profile
+            </a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-slate-100 px-4 py-3 hover:bg-slate-800/50 transition-all hover:translate-x-1 duration-200 font-['Plus_Jakarta_Sans'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+            </a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full py-3 bg-surface-container-highest text-primary font-bold rounded-xl text-xs tracking-widest uppercase hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+                Upgrade to Pro
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-10 bg-surface relative overflow-hidden">
+<!-- Background Architectural Elements -->
+<div class="absolute top-0 right-0 w-[600px] h-[600px] mesh-glow opacity-40 pointer-events-none"></div>
+<div class="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-secondary-container/5 rounded-full blur-[120px] pointer-events-none"></div>
+<!-- Editorial Header -->
+<header class="max-w-7xl mx-auto mb-16 relative">
+<div class="flex justify-between items-end">
+<div class="max-w-2xl">
+<span class="text-[10px] font-extrabold tracking-[0.3em] text-primary uppercase mb-4 block">Fiscal Efficiency Report • Q4 2024</span>
+<h2 class="text-6xl font-extrabold tracking-tighter text-on-surface leading-[0.9]">Premium Savings <br/><span class="text-outline">Analysis Dashboard.</span></h2>
+</div>
+<div class="text-right hidden md:block">
+<p class="text-on-surface-variant text-sm font-medium">Last architected: Oct 24, 2024</p>
+<div class="flex gap-2 mt-3 justify-end">
+<span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">AI Engine Active</span>
+</div>
+</div>
+</div>
+</header>
+<div class="max-w-7xl mx-auto grid grid-cols-12 gap-8">
+<!-- Summary Grid -->
+<section class="col-span-12 grid grid-cols-1 md:grid-cols-4 gap-6 mb-4">
+<!-- Total Savings -->
+<div class="glass-card p-8 rounded-2xl relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-8xl">account_balance_wallet</span>
+</div>
+<p class="text-on-surface-variant text-xs font-bold tracking-widest uppercase mb-6">Total Savings</p>
+<div class="flex items-baseline gap-1">
+<h3 class="text-4xl font-extrabold tracking-tighter text-on-surface">$47,250</h3>
+<span class="text-primary text-xs font-bold">+12%</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-on-primary-container to-primary" style="width: 75%"></div>
+</div>
+</div>
+<!-- Liability -->
+<div class="glass-card p-8 rounded-2xl">
+<p class="text-on-surface-variant text-xs font-bold tracking-widest uppercase mb-6">Current Liability</p>
+<h3 class="text-4xl font-extrabold tracking-tighter text-on-surface">$68,500</h3>
+<p class="text-[10px] text-error font-bold mt-4 uppercase tracking-wider">Requires Mitigation</p>
+</div>
+<!-- Optimized -->
+<div class="glass-card p-8 rounded-2xl border-l-4 border-primary">
+<p class="text-on-surface-variant text-xs font-bold tracking-widest uppercase mb-6">Optimized</p>
+<h3 class="text-4xl font-extrabold tracking-tighter text-primary">$21,250</h3>
+<p class="text-[10px] text-on-surface-variant font-bold mt-4 uppercase tracking-wider">Effective Reduction</p>
+</div>
+<!-- Rate -->
+<div class="glass-card p-8 rounded-2xl">
+<p class="text-on-surface-variant text-xs font-bold tracking-widest uppercase mb-6">Savings Rate</p>
+<div class="flex items-center gap-4">
+<h3 class="text-4xl font-extrabold tracking-tighter text-on-surface">31%</h3>
+<div class="h-12 w-12 rounded-full border-4 border-surface-container-low flex items-center justify-center">
+<div class="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin-slow"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Visualizations Column -->
+<div class="col-span-12 lg:col-span-8 space-y-8">
+<!-- Area Chart: 12-Month Projection -->
+<div class="glass-card p-10 rounded-3xl">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h4 class="text-xl font-bold tracking-tight">12-Month Projection</h4>
+<p class="text-on-surface-variant text-sm">Predictive modeling of tax-efficient wealth growth</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-xs font-semibold">With Planning</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-surface-container-highest"></span>
+<span class="text-xs font-semibold">Without</span>
+</div>
+</div>
+</div>
+<div class="h-64 flex items-end gap-1 relative">
+<!-- Chart Mockup with CSS -->
+<div class="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
+<div class="w-full h-px bg-outline-variant/10"></div>
+<div class="w-full h-px bg-outline-variant/10"></div>
+<div class="w-full h-px bg-outline-variant/10"></div>
+</div>
+<!-- Simplified Area Chart Visual -->
+<div class="flex-1 flex items-end justify-center relative h-full">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 40">
+<defs>
+<lineargradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:rgba(220, 87, 0, 0.4);stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:rgba(220, 87, 0, 0);stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 40 L0 30 C10 28, 20 25, 30 22 C40 20, 50 15, 60 12 C70 10, 80 5, 90 2 L100 0 L100 40 Z" fill="url(#grad1)"></path>
+<path d="M0 30 C10 28, 20 25, 30 22 C40 20, 50 15, 60 12 C70 10, 80 5, 90 2 L100 0" fill="none" stroke="#FFB596" stroke-width="0.5"></path>
+<path d="M0 32 C10 32, 20 31, 30 30 C40 30, 50 29, 60 28 C70 28, 80 27, 90 26 L100 25" fill="none" stroke="#464651" stroke-dasharray="1 1" stroke-width="0.5"></path>
+</svg>
+</div>
+</div>
+<div class="flex justify-between mt-6 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">
+<span>Jan</span><span>Mar</span><span>Jun</span><span>Sep</span><span>Dec</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Bar Chart: Savings by Category -->
+<div class="glass-card p-8 rounded-3xl">
+<h4 class="text-sm font-bold tracking-widest uppercase mb-8 text-on-surface-variant">Savings by Category</h4>
+<div class="space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold uppercase tracking-wide">
+<span>Business Expense</span>
+<span class="text-primary">$18.2k</span>
+</div>
+<div class="h-2 w-full bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-primary shadow-[0_0_12px_rgba(255,181,150,0.4)]" style="width: 85%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold uppercase tracking-wide">
+<span>Retirement (401k)</span>
+<span class="text-primary">$12.5k</span>
+</div>
+<div class="h-2 w-full bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-primary/60" style="width: 60%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold uppercase tracking-wide">
+<span>R&amp;D Tax Credit</span>
+<span class="text-primary">$9.8k</span>
+</div>
+<div class="h-2 w-full bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-primary/40" style="width: 45%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold uppercase tracking-wide">
+<span>Depreciation</span>
+<span class="text-primary">$6.7k</span>
+</div>
+<div class="h-2 w-full bg-surface-container-low rounded-full overflow-hidden">
+<div class="h-full bg-primary/20" style="width: 30%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Pie Chart: Strategy Distribution -->
+<div class="glass-card p-8 rounded-3xl flex flex-col items-center justify-center">
+<h4 class="text-sm font-bold tracking-widest uppercase mb-8 text-on-surface-variant self-start">Strategy Distribution</h4>
+<div class="relative w-48 h-48 mb-8">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<circle cx="18" cy="18" fill="none" r="16" stroke="#1F1F25" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="none" r="16" stroke="#FFB596" stroke-dasharray="40 100" stroke-linecap="round" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="none" r="16" stroke="#DC5700" stroke-dasharray="25 100" stroke-dashoffset="-40" stroke-linecap="round" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="none" r="16" stroke="#4CD6FB" stroke-dasharray="15 100" stroke-dashoffset="-65" stroke-linecap="round" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-2xl font-black tracking-tighter">84%</span>
+<span class="text-[8px] font-bold uppercase tracking-widest text-on-surface-variant">Efficiency</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 w-full">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-[10px] font-bold text-on-surface-variant">Active</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-on-primary-container"></span>
+<span class="text-[10px] font-bold text-on-surface-variant">Pending</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-[10px] font-bold text-on-surface-variant">Optimized</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-surface-container-highest"></span>
+<span class="text-[10px] font-bold text-on-surface-variant">Manual</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Recommended Actions -->
+<aside class="col-span-12 lg:col-span-4 space-y-8">
+<div class="glass-card p-8 rounded-3xl h-full border-l border-outline-variant/10">
+<div class="flex items-center gap-3 mb-10">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h4 class="text-xl font-bold tracking-tight">Recommended Actions</h4>
+</div>
+<div class="space-y-6">
+<!-- Action 1 -->
+<div class="group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-0.5 bg-error/10 text-error text-[10px] font-bold uppercase tracking-widest rounded border border-error/20">High Priority</span>
+<span class="text-primary font-extrabold text-sm">$8,450 Est.</span>
+</div>
+<h5 class="font-bold text-on-surface group-hover:text-primary transition-colors">Implement Augusta Rule</h5>
+<p class="text-on-surface-variant text-xs mt-1 leading-relaxed">Rent personal residence to corporation for 14 days of meetings.</p>
+<div class="h-px w-full bg-outline-variant/10 mt-6"></div>
+</div>
+<!-- Action 2 -->
+<div class="group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded border border-primary/20">Medium Priority</span>
+<span class="text-primary font-extrabold text-sm">$4,200 Est.</span>
+</div>
+<h5 class="font-bold text-on-surface group-hover:text-primary transition-colors">Section 179 Acceleration</h5>
+<p class="text-on-surface-variant text-xs mt-1 leading-relaxed">Immediate deduction of capital equipment purchased in Q3.</p>
+<div class="h-px w-full bg-outline-variant/10 mt-6"></div>
+</div>
+<!-- Action 3 -->
+<div class="group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase tracking-widest rounded border border-tertiary/20">Low Priority</span>
+<span class="text-primary font-extrabold text-sm">$1,850 Est.</span>
+</div>
+<h5 class="font-bold text-on-surface group-hover:text-primary transition-colors">Charitable Contribution Bunching</h5>
+<p class="text-on-surface-variant text-xs mt-1 leading-relaxed">Consolidate 3 years of giving into a single donor-advised fund.</p>
+<div class="h-px w-full bg-outline-variant/10 mt-6"></div>
+</div>
+<!-- AI Insight Card -->
+<div class="mt-12 bg-surface-container-lowest p-6 rounded-2xl border border-primary/10 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-4xl">auto_awesome</span>
+</div>
+<h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-on-tertiary-container mb-3">AI Architect Insight</h6>
+<p class="text-sm text-on-surface-variant italic leading-relaxed">"Based on your current cash flow, moving to a S-Corp election by January could save an additional <strong>$12,400</strong> in self-employment tax."</p>
+<button class="mt-6 w-full py-3 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs rounded-xl transition-all">Generate Strategy PDF</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Footer Shell -->
+<footer class="mt-20 py-12 border-t border-outline-variant/5">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div>
+<p class="font-['Plus_Jakarta_Sans'] text-xs tracking-wide text-slate-500">© 2024 AgFinTax. Built &amp; Powered by LoukriAI.com</p>
+</div>
+<div class="flex gap-8">
+<a class="text-slate-500 hover:text-orange-400 transition-colors text-xs tracking-wide font-['Plus_Jakarta_Sans']" href="#">Legal</a>
+<a class="text-slate-500 hover:text-orange-400 transition-colors text-xs tracking-wide font-['Plus_Jakarta_Sans']" href="#">Privacy Policy</a>
+<a class="text-slate-500 hover:text-orange-400 transition-colors text-xs tracking-wide font-['Plus_Jakarta_Sans']" href="#">Contact Support</a>
+<a class="text-slate-500 hover:text-orange-400 transition-colors text-xs tracking-wide font-['Plus_Jakarta_Sans']" href="#">Terms of Service</a>
+</div>
+<div class="text-right">
+<span class="font-bold text-slate-200">AgFinTax</span>
+</div>
+</div>
+</footer>
+</main>
+<!-- Contextual FAB -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="h-16 w-16 bg-primary text-on-primary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center group active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-12 transition-transform">auto_graph</span>
+</button>
+</div>
+</body></html>
