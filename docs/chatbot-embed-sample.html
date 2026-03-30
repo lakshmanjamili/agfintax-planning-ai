@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AG FinTax — AI Tax Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #03045e;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      color: #ff6600;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    header p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.85rem;
+    }
+
+    .hero {
+      max-width: 800px;
+      margin: 4rem auto;
+      text-align: center;
+      padding: 0 1.5rem;
+    }
+
+    .hero h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #03045e;
+      margin-bottom: 1rem;
+    }
+
+    .hero h2 span {
+      color: #ff6600;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: #555;
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      max-width: 800px;
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-top: 3px solid #ff6600;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #03045e;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .cta-hint {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .cta-hint .arrow {
+      display: inline-block;
+      font-size: 1.5rem;
+      color: #ff6600;
+      animation: bounce 1.5s infinite;
+    }
+
+    .cta-hint p {
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+      font-size: 0.8rem;
+      border-top: 1px solid #eee;
+    }
+
+    footer a {
+      color: #ff6600;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>AG FinTax</h1>
+      <p>Financial &amp; Tax Services for the Dynamic Business Owners</p>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h2>Meet Your <span>AI Tax Assistant</span></h2>
+    <p>Get instant answers on tax strategies, deductions, entity planning, and more. Click the chat icon in the bottom-right corner to start a conversation.</p>
+  </section>
+
+  <div class="features">
+    <div class="feature-card">
+      <h3>Tax Strategies</h3>
+      <p>30+ strategies covering retirement, real estate, depreciation, credits, and entity structuring.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Personalized Advice</h3>
+      <p>Recommendations tailored to your entity type, income level, and business situation.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Voice Enabled</h3>
+      <p>Speak naturally with the AI assistant — ask questions and get answers in real time.</p>
+    </div>
+  </div>
+
+  <div class="cta-hint">
+    <div class="arrow">&#8600;</div>
+    <p>Click the chat bubble to get started</p>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 AG FinTax. Built &amp; Powered by <a href="https://loukriai.com" target="_blank">LoukriAI.com</a></p>
+  </footer>
+
+  <!-- ElevenLabs Conversational AI Widget -->
+  <elevenlabs-convai agent-id="agent_7901kmy4q4tye9breddr79j1atqh"></elevenlabs-convai>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+</body>
+</html>
