@@ -127,7 +127,8 @@ export async function analyzeTaxDocument(
 }
 
 /**
- * General layout analysis (backward compatible)
+ * General layout analysis — processes ALL pages
+ * If Azure free tier limits to 2 pages, automatically chunks through the rest
  */
 export async function analyzeDocument(
   fileBuffer: ArrayBuffer,
@@ -138,13 +139,100 @@ export async function analyzeDocument(
   }
 
   const baseUrl = ENDPOINT.replace(/\/$/, "");
+
+  // First pass — try all pages at once
   const result = await runAnalysis(baseUrl, "prebuilt-layout", fileBuffer, contentType);
-  return parseOcrResult(result);
+  const firstResult = parseOcrResult(result);
+
+  // Check if Azure truncated (free tier = 2 pages)
+  // If the PDF is large (>100KB) but we only got ≤2 pages, chunk through the rest
+  const fileSizeKB = fileBuffer.byteLength / 1024;
+  if (firstResult.pages <= 2 && fileSizeKB > 100) {
+    console.log(`Azure returned only ${firstResult.pages} pages for a ${fileSizeKB.toFixed(0)}KB file — chunking remaining pages`);
+
+    let allText = firstResult.text;
+    let allPages = firstResult.pages;
+    let allConfidence = firstResult.confidence * firstResult.pages;
+    const allTables = [...firstResult.tables];
+
+    // Process pages in chunks of 2 (free tier limit)
+    let startPage = 3;
+    const maxPage = 100; // safety limit
+    let emptyCount = 0;
+
+    while (startPage <= maxPage && emptyCount < 2) {
+      const endPage = startPage + 1;
+      try {
+        console.log(`  Chunking pages ${startPage}-${endPage}...`);
+        const chunkResult = await runAnalysisWithPages(baseUrl, "prebuilt-layout", fileBuffer, contentType, `${startPage}-${endPage}`);
+        const chunk = parseOcrResult(chunkResult);
+
+        if (chunk.pages === 0 || chunk.text.trim().length === 0) {
+          emptyCount++;
+          startPage += 2;
+          continue;
+        }
+
+        emptyCount = 0;
+        allText += "\n\n" + chunk.text;
+        allPages += chunk.pages;
+        allConfidence += chunk.confidence * chunk.pages;
+        allTables.push(...chunk.tables);
+        console.log(`  Pages ${startPage}-${endPage}: +${chunk.text.length} chars (total: ${allText.length})`);
+      } catch (err) {
+        console.log(`  Pages ${startPage}-${endPage}: done (${err instanceof Error ? err.message : "no more pages"})`);
+        break;
+      }
+      startPage += 2;
+    }
+
+    console.log(`Azure OCR chunking complete: ${allPages} total pages, ${allText.length} total chars`);
+    return {
+      text: allText,
+      pages: allPages,
+      confidence: allPages > 0 ? allConfidence / allPages : 0,
+      tables: allTables,
+    };
+  }
+
+  return firstResult;
 }
 
 // ---------------------------------------------------------------------------
 // Internal Helpers
 // ---------------------------------------------------------------------------
+
+async function runAnalysisWithPages(
+  baseUrl: string,
+  model: string,
+  fileBuffer: ArrayBuffer,
+  contentType: string,
+  pages: string
+): Promise<Record<string, unknown>> {
+  const outputFormat = model === "prebuilt-layout" ? "&outputContentFormat=markdown" : "";
+  const analyzeUrl = `${baseUrl}/documentintelligence/documentModels/${model}:analyze?api-version=${API_VERSION}${outputFormat}&pages=${pages}`;
+
+  const analyzeResponse = await fetch(analyzeUrl, {
+    method: "POST",
+    headers: {
+      "Ocp-Apim-Subscription-Key": API_KEY,
+      "Content-Type": contentType,
+    },
+    body: fileBuffer,
+  });
+
+  if (!analyzeResponse.ok) {
+    const error = await analyzeResponse.text();
+    throw new Error(`Azure analyze failed (${model} pages=${pages}): ${analyzeResponse.status} - ${error}`);
+  }
+
+  const operationLocation = analyzeResponse.headers.get("operation-location");
+  if (!operationLocation) {
+    throw new Error("No operation-location header");
+  }
+
+  return await pollForResult(operationLocation);
+}
 
 async function runAnalysis(
   baseUrl: string,
@@ -154,6 +242,7 @@ async function runAnalysis(
 ): Promise<Record<string, unknown>> {
   const outputFormat = model === "prebuilt-layout" ? "&outputContentFormat=markdown" : "";
   const analyzeUrl = `${baseUrl}/documentintelligence/documentModels/${model}:analyze?api-version=${API_VERSION}${outputFormat}`;
+  console.log(`Azure OCR: model=${model}, buffer=${(fileBuffer.byteLength / 1024).toFixed(0)}KB, contentType=${contentType}`);
 
   const analyzeResponse = await fetch(analyzeUrl, {
     method: "POST",
@@ -190,7 +279,13 @@ async function pollForResult(
     if (!response.ok) throw new Error(`Poll failed: ${response.status}`);
     const result = await response.json();
 
-    if (result.status === "succeeded") return result.analyzeResult;
+    if (result.status === "succeeded") {
+      const ar = result.analyzeResult;
+      const pageCount = (ar?.pages as unknown[])?.length || 0;
+      const contentLen = ((ar?.content as string) || "").length;
+      console.log(`Azure OCR complete: ${pageCount} pages extracted, ${contentLen} chars of content`);
+      return ar;
+    }
     if (result.status === "failed") throw new Error(`Analysis failed: ${JSON.stringify(result.error)}`);
 
     await new Promise((resolve) => setTimeout(resolve, intervalMs));

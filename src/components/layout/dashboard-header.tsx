@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Bell, Menu, Search } from "lucide-react";
+import { Bell, Menu, Search, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarContent } from "@/components/layout/dashboard-sidebar";
+import { getEntityType, getEntityInfo, type EntityType } from "@/lib/tax/plan-store";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": {
@@ -59,6 +61,22 @@ function getPageMeta(pathname: string) {
 export function DashboardHeader() {
   const pathname = usePathname();
   const { title, subtitle } = getPageMeta(pathname);
+  const [entityType, setEntityType] = useState<EntityType | null>(null);
+
+  useEffect(() => {
+    setEntityType(getEntityType());
+    // Listen for storage changes (entity type set in Smart Plan)
+    const handler = () => setEntityType(getEntityType());
+    window.addEventListener("storage", handler);
+    // Also poll briefly since storage events don't fire in same tab
+    const interval = setInterval(handler, 2000);
+    return () => {
+      window.removeEventListener("storage", handler);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const entityInfo = entityType ? getEntityInfo(entityType) : null;
 
   return (
     <header className="sticky top-0 z-30 flex h-20 items-center gap-4 bg-[#131318]/80 px-4 backdrop-blur-md md:px-8">
@@ -81,7 +99,18 @@ export function DashboardHeader() {
 
       {/* Page title */}
       <div className="flex flex-col">
-        <h1 className="text-2xl font-bold text-white">{title}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-white">{title}</h1>
+          {entityInfo && (
+            <span
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
+              style={{ backgroundColor: `${entityInfo.color}15`, color: entityInfo.color }}
+            >
+              <Building2 className="w-3 h-3" />
+              {entityInfo.label} ({entityInfo.formNumber})
+            </span>
+          )}
+        </div>
         <p className="text-sm text-slate-500">{subtitle}</p>
       </div>
 

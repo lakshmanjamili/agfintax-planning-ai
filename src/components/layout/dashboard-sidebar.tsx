@@ -1,38 +1,47 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Brain,
-  FileText,
   TrendingUp,
-  PiggyBank,
-  ClipboardCheck,
   User,
   Settings,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getEntityType, getEntityInfo, type EntityType } from "@/lib/tax/plan-store";
 
 const mainNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { label: "Smart Plan", icon: Sparkles, href: "/dashboard/smart-plan" },
-  { label: "Tax Chat", icon: Brain, href: "/dashboard/tax-chat" },
-  { label: "Documents", icon: FileText, href: "/dashboard/documents" },
   { label: "Strategies", icon: TrendingUp, href: "/dashboard/strategies" },
-  { label: "Savings", icon: PiggyBank, href: "/dashboard/savings" },
-  { label: "Review", icon: ClipboardCheck, href: "/dashboard/tax-review" },
+  { label: "Tax Chat", icon: Brain, href: "/dashboard/tax-chat" },
 ];
 
 const bottomNavItems = [
-  { label: "Profile", icon: User, href: "/dashboard/profile" },
+  { label: "Build Profile", icon: User, href: "/dashboard/profile" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings" },
 ];
 
 export function SidebarContent() {
   const pathname = usePathname();
+  const [entityType, setEntityType] = useState<EntityType | null>(null);
+
+  useEffect(() => {
+    setEntityType(getEntityType());
+    const interval = setInterval(() => {
+      const current = getEntityType();
+      setEntityType((prev) => (prev === current ? prev : current));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const entityInfo = entityType ? getEntityInfo(entityType) : null;
 
   const renderNavItem = (item: (typeof mainNavItems)[0]) => {
     const isActive =
@@ -75,6 +84,22 @@ export function SidebarContent() {
           </div>
         </div>
       </div>
+
+      {/* Entity Type Badge */}
+      {entityInfo && (
+        <Link href="/dashboard/smart-plan">
+          <div
+            className="mx-4 mb-4 flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-all hover:opacity-80"
+            style={{ backgroundColor: `${entityInfo.color}10`, borderLeft: `3px solid ${entityInfo.color}` }}
+          >
+            <Building2 className="h-4 w-4 shrink-0" style={{ color: entityInfo.color }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-200 truncate">{entityInfo.label}</p>
+              <p className="text-[10px] text-slate-500">Form {entityInfo.formNumber}</p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
