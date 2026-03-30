@@ -1,6 +1,6 @@
 import { TAX_SYSTEM_PROMPT } from "@/lib/ai/tax-system-prompt";
 
-export const runtime = "edge";
+export const maxDuration = 60;
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -16,7 +16,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Try primary model, fall back if needed
     const models = [
       "anthropic/claude-sonnet-4",
       "anthropic/claude-3.5-sonnet",
@@ -27,8 +26,12 @@ export async function POST(req: Request) {
 
     for (const model of models) {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 45000);
+
         const response = await fetch(OPENROUTER_URL, {
           method: "POST",
+          signal: controller.signal,
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
@@ -39,22 +42,22 @@ export async function POST(req: Request) {
             model,
             stream: true,
             temperature: 0.3,
-            max_tokens: 4096,
+            max_tokens: 2000,
             messages: [
               { role: "system", content: TAX_SYSTEM_PROMPT },
               ...messages,
             ],
           }),
         });
+        clearTimeout(timeout);
 
         if (!response.ok) {
           const errorText = await response.text();
-          lastError = `Model ${model}: ${response.status} - ${errorText}`;
-          console.error(`OpenRouter error with ${model}:`, lastError);
-          continue; // try next model
+          lastError = `${model}: ${response.status} - ${errorText.slice(0, 200)}`;
+          console.error(`Chat API: ${lastError}`);
+          continue;
         }
 
-        // Stream the response back
         const reader = response.body?.getReader();
         if (!reader) {
           lastError = `No response body from ${model}`;
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
         }
 
         const stream = new ReadableStream({
-          async start(controller) {
+          async start(streamController) {
             const encoder = new TextEncoder();
             const decoder = new TextDecoder();
             let buffer = "";
@@ -86,17 +89,17 @@ export async function POST(req: Request) {
                     const parsed = JSON.parse(data);
                     const content = parsed.choices?.[0]?.delta?.content;
                     if (content) {
-                      controller.enqueue(encoder.encode(content));
+                      streamController.enqueue(encoder.encode(content));
                     }
                   } catch {
-                    // Skip malformed JSON chunks
+                    // Skip malformed SSE chunks
                   }
                 }
               }
             } catch (err) {
-              console.error("Stream read error:", err);
+              console.error("Stream error:", err);
             } finally {
-              controller.close();
+              streamController.close();
             }
           },
         });
@@ -108,29 +111,22 @@ export async function POST(req: Request) {
           },
         });
       } catch (err) {
-        lastError = `Model ${model}: ${String(err)}`;
-        console.error(lastError);
+        lastError = `${model}: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(`Chat API: ${lastError}`);
         continue;
       }
     }
 
-    // All models failed
-    console.error("All models failed. Last error:", lastError);
+    console.error("Chat API: All models failed.", lastError);
     return new Response(
-      `I apologize, but I'm temporarily unable to process your request. Please try again in a moment.\n\nError details: ${lastError}`,
-      {
-        status: 200, // Return 200 so the client shows the message
-        headers: { "Content-Type": "text/plain; charset=utf-8" },
-      }
+      "I'm temporarily unable to respond. Please try again in a moment.",
+      { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } }
     );
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(
-      "Sorry, something went wrong processing your request. Please try again.",
-      {
-        status: 200,
-        headers: { "Content-Type": "text/plain; charset=utf-8" },
-      }
+      "Something went wrong. Please try again.",
+      { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } }
     );
   }
 }

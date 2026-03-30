@@ -441,7 +441,7 @@ export default function Home() {
               {[
                 { value: "3.2s", label: "Avg Processing Time" },
                 { value: "40+", label: "Document Types" },
-                { value: "15+", label: "Tax Strategies" },
+                { value: "46+", label: "Tax Strategies" },
                 { value: "99%", label: "OCR Accuracy" },
               ].map((stat) => (
                 <div key={stat.label} className="glass-card rounded-2xl p-6 text-center">
@@ -493,7 +493,7 @@ export default function Home() {
                   price: "$49",
                   period: "/month",
                   desc: "For business owners and high-income earners",
-                  features: ["Unlimited AI chat", "Unlimited document uploads", "All 15+ tax strategies", "AI tax return review", "Savings dashboard & charts", "Priority support", "Export reports (PDF/CSV)"],
+                  features: ["Unlimited AI chat", "Unlimited document uploads", "All 46+ tax strategies", "AI tax return review", "Savings dashboard & charts", "Priority support", "Export reports (PDF/CSV)"],
                   cta: "Start Free Trial",
                   featured: true,
                 },

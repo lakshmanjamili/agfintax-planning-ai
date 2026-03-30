@@ -94,14 +94,19 @@ export function buildCoverageMap(coveredIds: string[]): Array<{
 /**
  * Build the AI system prompt for guided conversation
  */
-export function buildConversationPrompt(coveredIds: string[], conversationHistory: string): string {
+export function buildConversationPrompt(coveredIds: string[], conversationHistory: string, entityType?: string): string {
   const uncovered = getUncoveredIntents(coveredIds);
   const uncoveredCritical = uncovered.filter((i) => i.priority === "critical");
   const uncoveredHigh = uncovered.filter((i) => i.priority === "high");
   const uncoveredMedium = uncovered.filter((i) => i.priority === "medium");
   const ready = hasEnoughInfo(coveredIds);
 
+  // Entity-specific context for smarter questions
+  const entityContext = getEntityContext(entityType);
+
   return `You are an expert tax planning advisor for AG FinTax. You are conducting an INTAKE CONVERSATION to understand the client's tax situation before building their personalized plan.
+
+${entityContext}
 
 YOUR ROLE: Ask smart questions to understand their COMPLETE tax picture. You must gather enough information before generating strategies. Be conversational, warm, and professional — like a real CPA intake meeting.
 
@@ -143,13 +148,47 @@ ${conversationHistory ? `CONVERSATION SO FAR:\n${conversationHistory}` : "Start 
 }
 
 /**
+ * Get entity-specific context for the AI conversation
+ */
+function getEntityContext(entityType?: string): string {
+  if (!entityType || entityType === "individual") {
+    return `CLIENT ENTITY TYPE: Individual (Form 1040)
+Focus on: W-2 income, retirement contributions (401k, IRA, Roth), itemized vs standard deductions, tax credits (child, education, EV), investment strategies (tax-loss harvesting, capital gains), and charitable giving.`;
+  }
+  if (entityType === "s_corp") {
+    return `CLIENT ENTITY TYPE: S-Corporation (Form 1120-S)
+Focus on: Reasonable compensation optimization, shareholder distributions vs salary, retirement plan stacking (401k + profit sharing + cash balance), accountable plan, self-employed health insurance, hiring family members, home office/Augusta Rule, fringe benefits, and entity-level deductions.
+IMPORTANT: Always ask about current officer salary, distribution amounts, and number of employees.`;
+  }
+  if (entityType === "c_corp") {
+    return `CLIENT ENTITY TYPE: C-Corporation (Form 1120)
+Focus on: 21% flat corporate rate advantages, retained earnings strategy, Section 1202 QSBS exclusion ($10M+), fringe benefit optimization (medical reimbursement, group term life), accumulated earnings tax planning, R&D credits, and dividend vs salary optimization.
+IMPORTANT: Ask about whether they plan to sell the business (QSBS), and current retained earnings.`;
+  }
+  if (entityType === "partnership") {
+    return `CLIENT ENTITY TYPE: Partnership (Form 1065)
+Focus on: Special allocation strategies, guaranteed payments optimization, self-employment tax on partner income, Section 754 election for basis step-up, carried interest rules, partner retirement plans, and K-1 distribution planning.
+IMPORTANT: Ask about number of partners, allocation percentages, and guaranteed payment arrangements.`;
+  }
+  if (entityType === "sole_prop") {
+    return `CLIENT ENTITY TYPE: Sole Proprietorship / LLC (Schedule C)
+Focus on: Schedule C deductions, self-employment tax optimization, S-Corp election evaluation, home office deduction, vehicle expenses, retirement plans (SEP IRA, Solo 401k), health insurance deduction, and QBI deduction (Section 199A).
+IMPORTANT: Always evaluate whether S-Corp election would save payroll taxes — this is often the biggest opportunity.`;
+  }
+  return "";
+}
+
+/**
  * Build prompt for analyzing voice transcript and identifying what's covered vs missing
  */
-export function buildVoiceAnalysisPrompt(transcript: string, coveredIds: string[]): string {
+export function buildVoiceAnalysisPrompt(transcript: string, coveredIds: string[], entityType?: string): string {
   const uncovered = getUncoveredIntents(coveredIds);
   const ready = hasEnoughInfo(coveredIds);
+  const entityContext = entityType ? getEntityContext(entityType) : "";
 
   return `You heard the user describe their tax situation. Analyze what they told you and identify what's MISSING.
+
+${entityContext}
 
 TRANSCRIPT: "${transcript}"
 
