@@ -89,12 +89,12 @@ const fadeIn = {
 
 /* ─── Steps ─── */
 const STEPS = [
+  { id: "upload", label: "Tax Return", icon: Upload },
   { id: "entity", label: "Entity Type", icon: Building2 },
   { id: "personal", label: "Personal Info", icon: User },
   { id: "income", label: "Income", icon: DollarSign },
   { id: "financial", label: "Financial", icon: TrendingUp },
   { id: "goals", label: "Goals", icon: Target },
-  { id: "upload", label: "Tax Return", icon: Upload },
 ];
 
 /* ─── Glass Panel ─── */
@@ -443,7 +443,8 @@ export default function ProfilePage() {
           <div>
             <h1 className="text-2xl font-bold text-white md:text-3xl">Build My Profile</h1>
             <p className="mt-1 text-slate-500">
-              Complete your profile for personalized tax planning. Use the form, voice input, or upload a prior return.
+              Start by uploading your prior year tax return — AI will auto-fill most of your profile.
+              Then review and complete any remaining details for your personalized tax plan.
             </p>
           </div>
           {saved && (
@@ -533,321 +534,24 @@ export default function ProfilePage() {
         {/* ─── Step Content ─── */}
         <div className="lg:col-span-3">
           <AnimatePresence mode="wait">
-            {/* STEP 0: Entity Type */}
+            {/* STEP 0: Tax Return Upload (fastest way to build profile) */}
             {currentStep === 0 && (
-              <motion.div key="entity" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
-                <GlassPanel>
-                  <h2 className="text-lg font-bold text-white mb-1">Select Your Entity Type</h2>
-                  <p className="text-sm text-slate-500 mb-5">This determines your tax form, strategies, and document requirements.</p>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {ENTITY_TYPES.map((entity) => {
-                      const isSelected = profile.entityType === entity.id;
-                      return (
-                        <button
-                          key={entity.id}
-                          onClick={() => updateProfile({ entityType: entity.id })}
-                          className="text-left rounded-xl border p-4 transition-all"
-                          style={
-                            isSelected
-                              ? { borderColor: `${entity.color}50`, backgroundColor: `${entity.color}08` }
-                              : { borderColor: "rgba(255,255,255,0.05)", backgroundColor: "rgba(31,31,37,0.5)" }
-                          }
-                        >
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${entity.color}15` }}>
-                              <Building2 className="h-4 w-4" style={{ color: entity.color }} />
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold" style={{ color: isSelected ? entity.color : "#E2E8F0" }}>{entity.label}</p>
-                              <p className="text-[10px] text-slate-500">Form {entity.formNumber}</p>
-                            </div>
-                            {isSelected && <CheckCircle2 className="h-4 w-4 ml-auto" style={{ color: entity.color }} />}
-                          </div>
-                          <p className="text-xs text-slate-500">{entity.description}</p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {entity.features.slice(0, 2).map((f) => (
-                              <span key={f} className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.03] text-slate-500">
-                                {f}
-                              </span>
-                            ))}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </GlassPanel>
-              </motion.div>
-            )}
-
-            {/* STEP 1: Personal Info */}
-            {currentStep === 1 && (
-              <motion.div key="personal" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
-                <GlassPanel>
-                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                    <User className="h-5 w-5" style={{ color: accentColor }} />
-                    Personal Information
-                  </h2>
-                  <p className="text-sm text-slate-500 mb-5">Basic info for your tax profile.</p>
-
-                  <div className="space-y-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className={labelClasses}>Full Name</label>
-                        <input value={user?.fullName || ""} disabled className={`${inputClasses} opacity-50 cursor-not-allowed`} />
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Email</label>
-                        <input value={user?.primaryEmailAddress?.emailAddress || ""} disabled className={`${inputClasses} opacity-50 cursor-not-allowed`} />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className={labelClasses}>Occupation</label>
-                        <div className="relative">
-                          <input
-                            placeholder="e.g., Software Engineer, Business Owner"
-                            value={profile.occupation}
-                            onChange={(e) => updateProfile({ occupation: e.target.value })}
-                            className={inputClasses}
-                            style={{ borderColor: profile.occupation ? `${accentColor}20` : undefined }}
-                          />
-                          <VoiceBtn field="occupation" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Filing Status</label>
-                        <select
-                          value={profile.filingStatus}
-                          onChange={(e) => updateProfile({ filingStatus: e.target.value })}
-                          className={`${inputClasses} appearance-none cursor-pointer`}
-                          style={{ borderColor: profile.filingStatus !== "single" ? `${accentColor}20` : undefined }}
-                        >
-                          {FILING_STATUSES.map((fs) => (
-                            <option key={fs.value} value={fs.value}>{fs.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className={labelClasses}>State of Residence</label>
-                        <select
-                          value={profile.state}
-                          onChange={(e) => updateProfile({ state: e.target.value })}
-                          className={`${inputClasses} appearance-none cursor-pointer`}
-                          style={{ borderColor: profile.state ? `${accentColor}20` : undefined }}
-                        >
-                          <option value="">Select state</option>
-                          {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className={labelClasses}>Number of Dependents</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          value={profile.dependents}
-                          onChange={(e) => updateProfile({ dependents: parseInt(e.target.value) || 0 })}
-                          className={inputClasses}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </GlassPanel>
-              </motion.div>
-            )}
-
-            {/* STEP 2: Income */}
-            {currentStep === 2 && (
-              <motion.div key="income" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
-                <GlassPanel>
-                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" style={{ color: accentColor }} />
-                    Income Information
-                  </h2>
-                  <p className="text-sm text-slate-500 mb-5">Tell us about your income for tailored strategies.</p>
-
-                  <div className="space-y-5">
-                    <div>
-                      <label className={labelClasses}>Annual Income</label>
-                      <div className="relative">
-                        <input
-                          placeholder="$150,000"
-                          value={profile.annualIncome}
-                          onChange={(e) => updateProfile({ annualIncome: e.target.value })}
-                          className={inputClasses}
-                          style={{ borderColor: profile.annualIncome ? `${accentColor}20` : undefined }}
-                        />
-                        <VoiceBtn field="annualIncome" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={labelClasses}>Income Sources</label>
-                      <PillSelect
-                        options={INCOME_SOURCES}
-                        selected={profile.incomeSources}
-                        onToggle={(val) => toggleArrayItem("incomeSources", val)}
-                        color={accentColor}
-                      />
-                    </div>
-
-                    {/* Business details — show if business entity or business income source */}
-                    {(profile.entityType !== "individual" || profile.incomeSources.includes("Self-Employment")) && (
-                      <div className="rounded-xl border border-white/[0.05] bg-[rgba(31,31,37,0.4)] p-5 space-y-4">
-                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                          <Briefcase className="h-4 w-4" style={{ color: accentColor }} />
-                          Business Details
-                        </h3>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div>
-                            <label className={labelClasses}>Business Name</label>
-                            <input
-                              placeholder="e.g., Acme Consulting LLC"
-                              value={profile.businessName}
-                              onChange={(e) => updateProfile({ businessName: e.target.value })}
-                              className={inputClasses}
-                            />
-                          </div>
-                          <div>
-                            <label className={labelClasses}>Business Income</label>
-                            <div className="relative">
-                              <input
-                                placeholder="$200,000"
-                                value={profile.businessIncome}
-                                onChange={(e) => updateProfile({ businessIncome: e.target.value })}
-                                className={inputClasses}
-                              />
-                              <VoiceBtn field="businessIncome" />
-                            </div>
-                          </div>
-                          <div>
-                            <label className={labelClasses}>Number of Employees</label>
-                            <input
-                              placeholder="e.g., 5"
-                              value={profile.numberOfEmployees}
-                              onChange={(e) => updateProfile({ numberOfEmployees: e.target.value })}
-                              className={inputClasses}
-                            />
-                          </div>
-                          <div>
-                            <label className={labelClasses}>Year Established</label>
-                            <input
-                              placeholder="e.g., 2019"
-                              value={profile.yearEstablished}
-                              onChange={(e) => updateProfile({ yearEstablished: e.target.value })}
-                              className={inputClasses}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </GlassPanel>
-              </motion.div>
-            )}
-
-            {/* STEP 3: Financial Situation */}
-            {currentStep === 3 && (
-              <motion.div key="financial" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
-                <GlassPanel>
-                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" style={{ color: accentColor }} />
-                    Financial Situation
-                  </h2>
-                  <p className="text-sm text-slate-500 mb-5">These unlock specific tax strategies.</p>
-
-                  <div className="space-y-4">
-                    {[
-                      { label: "Real estate or rental properties", icon: Home, field: "hasRealEstate" as const, value: profile.hasRealEstate },
-                      { label: "Business income (self-employment, side hustle)", icon: Briefcase, field: "hasBusinessIncome" as const, value: profile.hasBusinessIncome },
-                      { label: "Mortgage on primary home", icon: Home, field: "hasMortgage" as const, value: profile.hasMortgage },
-                      { label: "Retirement accounts (401k, IRA, etc.)", icon: PiggyBank, field: "hasRetirementAccounts" as const, value: profile.hasRetirementAccounts },
-                      { label: "Investments or stocks", icon: TrendingUp, field: "hasInvestments" as const, value: profile.hasInvestments },
-                      { label: "Health insurance (employer or marketplace)", icon: Shield, field: "hasHealthInsurance" as const, value: profile.hasHealthInsurance },
-                      { label: "Student loans", icon: GraduationCap, field: "hasStudentLoans" as const, value: profile.hasStudentLoans },
-                      { label: "Charitable giving / donations", icon: Heart, field: "hasCharitableGiving" as const, value: profile.hasCharitableGiving },
-                      { label: "International income or assets", icon: Globe, field: "hasInternational" as const, value: profile.hasInternational },
-                    ].map((item) => (
-                      <div
-                        key={item.field}
-                        className="flex items-center justify-between rounded-xl border border-white/[0.05] bg-[rgba(15,15,20,0.5)] p-4"
-                      >
-                        <div className="flex items-center gap-3">
-                          <item.icon className="h-4 w-4 text-slate-500" />
-                          <span className="text-sm text-slate-200">{item.label}</span>
-                        </div>
-                        <Toggle
-                          checked={item.value}
-                          onChange={(v) => updateProfile({ [item.field]: v })}
-                          color={accentColor}
-                        />
-                      </div>
-                    ))}
-
-                    {/* Retirement account types */}
-                    {profile.hasRetirementAccounts && (
-                      <div className="pl-7">
-                        <label className={labelClasses}>Which retirement accounts?</label>
-                        <PillSelect
-                          options={RETIREMENT_TYPES}
-                          selected={profile.retirementAccountTypes}
-                          onToggle={(val) => toggleArrayItem("retirementAccountTypes", val)}
-                          color={accentColor}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </GlassPanel>
-              </motion.div>
-            )}
-
-            {/* STEP 4: Goals */}
-            {currentStep === 4 && (
-              <motion.div key="goals" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
-                <GlassPanel>
-                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                    <Target className="h-5 w-5" style={{ color: accentColor }} />
-                    Goals & Priorities
-                  </h2>
-                  <p className="text-sm text-slate-500 mb-5">What matters most to you? This shapes your strategy recommendations.</p>
-
-                  <div className="space-y-5">
-                    <div>
-                      <label className={labelClasses}>Tax Savings Target</label>
-                      <div className="relative">
-                        <input
-                          placeholder="$25,000"
-                          value={profile.savingsTarget}
-                          onChange={(e) => updateProfile({ savingsTarget: e.target.value })}
-                          className={inputClasses}
-                          style={{ borderColor: profile.savingsTarget ? `${accentColor}20` : undefined }}
-                        />
-                        <VoiceBtn field="savingsTarget" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={labelClasses}>Planning Priorities</label>
-                      <PillSelect
-                        options={PLANNING_PRIORITIES}
-                        selected={profile.planningPriorities}
-                        onToggle={(val) => toggleArrayItem("planningPriorities", val)}
-                        color={accentColor}
-                      />
-                    </div>
-                  </div>
-                </GlassPanel>
-              </motion.div>
-            )}
-
-            {/* STEP 5: Tax Return Upload */}
-            {currentStep === 5 && (
               <motion.div key="upload" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
                 <GlassPanel>
+                  <div className="flex items-start gap-4 mb-6 p-4 rounded-xl bg-gradient-to-r from-[rgba(220,87,0,0.08)] to-transparent border border-[rgba(220,87,0,0.15)]">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${accentColor}15` }}>
+                      <Sparkles className="w-5 h-5" style={{ color: accentColor }} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white mb-1">Fastest Way to Build Your Profile</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Upload your prior year tax return (1040, 1120-S, 1065, etc.) and our AI will automatically extract your income,
+                        deductions, filing status, and financial details — saving you from filling in everything manually.
+                        You can also upload W-2s, 1099s, K-1s, and other documents to build a more complete picture.
+                      </p>
+                    </div>
+                  </div>
+
                   <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
                     <Upload className="h-5 w-5" style={{ color: accentColor }} />
                     Upload Tax Documents
@@ -928,7 +632,7 @@ export default function ProfilePage() {
                             Document analyzed &amp; merged into profile!
                           </p>
                           <p className="text-xs text-slate-500">
-                            {(profile.uploadedDocuments || []).length} document{(profile.uploadedDocuments || []).length !== 1 ? "s" : ""} analyzed — upload more to build a comprehensive profile
+                            {(profile.uploadedDocuments || []).length} document{(profile.uploadedDocuments || []).length !== 1 ? "s" : ""} analyzed — upload more or continue to review your profile
                           </p>
                         </>
                       ) : uploadStatus === "error" ? (
@@ -1017,9 +721,328 @@ export default function ProfilePage() {
                       </p>
                     </div>
                   )}
+
+                  {/* Skip upload hint */}
+                  {(profile.uploadedDocuments || []).length === 0 && uploadStatus === "idle" && (
+                    <p className="text-center text-xs text-slate-600 mt-4">
+                      Don&apos;t have your return handy? No problem — click <strong className="text-slate-400">Next</strong> to fill in your details manually.
+                    </p>
+                  )}
                 </GlassPanel>
               </motion.div>
             )}
+
+            {/* STEP 1: Entity Type */}
+            {currentStep === 1 && (
+              <motion.div key="entity" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
+                <GlassPanel>
+                  <h2 className="text-lg font-bold text-white mb-1">Select Your Entity Type</h2>
+                  <p className="text-sm text-slate-500 mb-5">This determines your tax form, strategies, and document requirements.</p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {ENTITY_TYPES.map((entity) => {
+                      const isSelected = profile.entityType === entity.id;
+                      return (
+                        <button
+                          key={entity.id}
+                          onClick={() => updateProfile({ entityType: entity.id })}
+                          className="text-left rounded-xl border p-4 transition-all"
+                          style={
+                            isSelected
+                              ? { borderColor: `${entity.color}50`, backgroundColor: `${entity.color}08` }
+                              : { borderColor: "rgba(255,255,255,0.05)", backgroundColor: "rgba(31,31,37,0.5)" }
+                          }
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${entity.color}15` }}>
+                              <Building2 className="h-4 w-4" style={{ color: entity.color }} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold" style={{ color: isSelected ? entity.color : "#E2E8F0" }}>{entity.label}</p>
+                              <p className="text-[10px] text-slate-500">Form {entity.formNumber}</p>
+                            </div>
+                            {isSelected && <CheckCircle2 className="h-4 w-4 ml-auto" style={{ color: entity.color }} />}
+                          </div>
+                          <p className="text-xs text-slate-500">{entity.description}</p>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {entity.features.slice(0, 2).map((f) => (
+                              <span key={f} className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/[0.03] text-slate-500">
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </GlassPanel>
+              </motion.div>
+            )}
+
+            {/* STEP 2: Personal Info */}
+            {currentStep === 2 && (
+              <motion.div key="personal" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
+                <GlassPanel>
+                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <User className="h-5 w-5" style={{ color: accentColor }} />
+                    Personal Information
+                  </h2>
+                  <p className="text-sm text-slate-500 mb-5">Basic info for your tax profile.</p>
+
+                  <div className="space-y-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className={labelClasses}>Full Name</label>
+                        <input value={user?.fullName || ""} disabled className={`${inputClasses} opacity-50 cursor-not-allowed`} />
+                      </div>
+                      <div>
+                        <label className={labelClasses}>Email</label>
+                        <input value={user?.primaryEmailAddress?.emailAddress || ""} disabled className={`${inputClasses} opacity-50 cursor-not-allowed`} />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className={labelClasses}>Occupation</label>
+                        <div className="relative">
+                          <input
+                            placeholder="e.g., Software Engineer, Business Owner"
+                            value={profile.occupation}
+                            onChange={(e) => updateProfile({ occupation: e.target.value })}
+                            className={inputClasses}
+                            style={{ borderColor: profile.occupation ? `${accentColor}20` : undefined }}
+                          />
+                          <VoiceBtn field="occupation" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelClasses}>Filing Status</label>
+                        <select
+                          value={profile.filingStatus}
+                          onChange={(e) => updateProfile({ filingStatus: e.target.value })}
+                          className={`${inputClasses} appearance-none cursor-pointer`}
+                          style={{ borderColor: profile.filingStatus !== "single" ? `${accentColor}20` : undefined }}
+                        >
+                          {FILING_STATUSES.map((fs) => (
+                            <option key={fs.value} value={fs.value}>{fs.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className={labelClasses}>State of Residence</label>
+                        <select
+                          value={profile.state}
+                          onChange={(e) => updateProfile({ state: e.target.value })}
+                          className={`${inputClasses} appearance-none cursor-pointer`}
+                          style={{ borderColor: profile.state ? `${accentColor}20` : undefined }}
+                        >
+                          <option value="">Select state</option>
+                          {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelClasses}>Number of Dependents</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          value={profile.dependents}
+                          onChange={(e) => updateProfile({ dependents: parseInt(e.target.value) || 0 })}
+                          className={inputClasses}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </GlassPanel>
+              </motion.div>
+            )}
+
+            {/* STEP 3: Income */}
+            {currentStep === 3 && (
+              <motion.div key="income" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
+                <GlassPanel>
+                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" style={{ color: accentColor }} />
+                    Income Information
+                  </h2>
+                  <p className="text-sm text-slate-500 mb-5">Tell us about your income for tailored strategies.</p>
+
+                  <div className="space-y-5">
+                    <div>
+                      <label className={labelClasses}>Annual Income</label>
+                      <div className="relative">
+                        <input
+                          placeholder="$150,000"
+                          value={profile.annualIncome}
+                          onChange={(e) => updateProfile({ annualIncome: e.target.value })}
+                          className={inputClasses}
+                          style={{ borderColor: profile.annualIncome ? `${accentColor}20` : undefined }}
+                        />
+                        <VoiceBtn field="annualIncome" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={labelClasses}>Income Sources</label>
+                      <PillSelect
+                        options={INCOME_SOURCES}
+                        selected={profile.incomeSources}
+                        onToggle={(val) => toggleArrayItem("incomeSources", val)}
+                        color={accentColor}
+                      />
+                    </div>
+
+                    {/* Business details — show if business entity or business income source */}
+                    {(profile.entityType !== "individual" || profile.incomeSources.includes("Self-Employment")) && (
+                      <div className="rounded-xl border border-white/[0.05] bg-[rgba(31,31,37,0.4)] p-5 space-y-4">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <Briefcase className="h-4 w-4" style={{ color: accentColor }} />
+                          Business Details
+                        </h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <label className={labelClasses}>Business Name</label>
+                            <input
+                              placeholder="e.g., Acme Consulting LLC"
+                              value={profile.businessName}
+                              onChange={(e) => updateProfile({ businessName: e.target.value })}
+                              className={inputClasses}
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClasses}>Business Income</label>
+                            <div className="relative">
+                              <input
+                                placeholder="$200,000"
+                                value={profile.businessIncome}
+                                onChange={(e) => updateProfile({ businessIncome: e.target.value })}
+                                className={inputClasses}
+                              />
+                              <VoiceBtn field="businessIncome" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className={labelClasses}>Number of Employees</label>
+                            <input
+                              placeholder="e.g., 5"
+                              value={profile.numberOfEmployees}
+                              onChange={(e) => updateProfile({ numberOfEmployees: e.target.value })}
+                              className={inputClasses}
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClasses}>Year Established</label>
+                            <input
+                              placeholder="e.g., 2019"
+                              value={profile.yearEstablished}
+                              onChange={(e) => updateProfile({ yearEstablished: e.target.value })}
+                              className={inputClasses}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </GlassPanel>
+              </motion.div>
+            )}
+
+            {/* STEP 4: Financial Situation */}
+            {currentStep === 4 && (
+              <motion.div key="financial" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
+                <GlassPanel>
+                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" style={{ color: accentColor }} />
+                    Financial Situation
+                  </h2>
+                  <p className="text-sm text-slate-500 mb-5">These unlock specific tax strategies.</p>
+
+                  <div className="space-y-4">
+                    {[
+                      { label: "Real estate or rental properties", icon: Home, field: "hasRealEstate" as const, value: profile.hasRealEstate },
+                      { label: "Business income (self-employment, side hustle)", icon: Briefcase, field: "hasBusinessIncome" as const, value: profile.hasBusinessIncome },
+                      { label: "Mortgage on primary home", icon: Home, field: "hasMortgage" as const, value: profile.hasMortgage },
+                      { label: "Retirement accounts (401k, IRA, etc.)", icon: PiggyBank, field: "hasRetirementAccounts" as const, value: profile.hasRetirementAccounts },
+                      { label: "Investments or stocks", icon: TrendingUp, field: "hasInvestments" as const, value: profile.hasInvestments },
+                      { label: "Health insurance (employer or marketplace)", icon: Shield, field: "hasHealthInsurance" as const, value: profile.hasHealthInsurance },
+                      { label: "Student loans", icon: GraduationCap, field: "hasStudentLoans" as const, value: profile.hasStudentLoans },
+                      { label: "Charitable giving / donations", icon: Heart, field: "hasCharitableGiving" as const, value: profile.hasCharitableGiving },
+                      { label: "International income or assets", icon: Globe, field: "hasInternational" as const, value: profile.hasInternational },
+                    ].map((item) => (
+                      <div
+                        key={item.field}
+                        className="flex items-center justify-between rounded-xl border border-white/[0.05] bg-[rgba(15,15,20,0.5)] p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon className="h-4 w-4 text-slate-500" />
+                          <span className="text-sm text-slate-200">{item.label}</span>
+                        </div>
+                        <Toggle
+                          checked={item.value}
+                          onChange={(v) => updateProfile({ [item.field]: v })}
+                          color={accentColor}
+                        />
+                      </div>
+                    ))}
+
+                    {/* Retirement account types */}
+                    {profile.hasRetirementAccounts && (
+                      <div className="pl-7">
+                        <label className={labelClasses}>Which retirement accounts?</label>
+                        <PillSelect
+                          options={RETIREMENT_TYPES}
+                          selected={profile.retirementAccountTypes}
+                          onToggle={(val) => toggleArrayItem("retirementAccountTypes", val)}
+                          color={accentColor}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </GlassPanel>
+              </motion.div>
+            )}
+
+            {/* STEP 5: Goals */}
+            {currentStep === 5 && (
+              <motion.div key="goals" initial="hidden" animate="visible" exit="exit" variants={fadeIn}>
+                <GlassPanel>
+                  <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <Target className="h-5 w-5" style={{ color: accentColor }} />
+                    Goals & Priorities
+                  </h2>
+                  <p className="text-sm text-slate-500 mb-5">What matters most to you? This shapes your strategy recommendations.</p>
+
+                  <div className="space-y-5">
+                    <div>
+                      <label className={labelClasses}>Tax Savings Target</label>
+                      <div className="relative">
+                        <input
+                          placeholder="$25,000"
+                          value={profile.savingsTarget}
+                          onChange={(e) => updateProfile({ savingsTarget: e.target.value })}
+                          className={inputClasses}
+                          style={{ borderColor: profile.savingsTarget ? `${accentColor}20` : undefined }}
+                        />
+                        <VoiceBtn field="savingsTarget" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={labelClasses}>Planning Priorities</label>
+                      <PillSelect
+                        options={PLANNING_PRIORITIES}
+                        selected={profile.planningPriorities}
+                        onToggle={(val) => toggleArrayItem("planningPriorities", val)}
+                        color={accentColor}
+                      />
+                    </div>
+                  </div>
+                </GlassPanel>
+              </motion.div>
+            )}
+
           </AnimatePresence>
 
           {/* ─── Navigation ─── */}
