@@ -2482,33 +2482,9 @@ ${strategyPages}
           <div className="flex flex-col h-[calc(100vh-5rem)]">
             {/* Header bar */}
             <div className="shrink-0 z-30 bg-[#131318]/80 backdrop-blur-md border-b border-white/5">
-              <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#FFB596]" />
-                  <span className="text-sm font-semibold text-[#E4E1E9]">Your Tax Plan</span>
-                  {selectedEntity && (() => {
-                    const eInfo = getEntityInfo(selectedEntity);
-                    return (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ml-1" style={{ backgroundColor: `${eInfo.color}15`, color: eInfo.color }}>
-                        {eInfo.label} ({eInfo.formNumber})
-                      </span>
-                    );
-                  })()}
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-[11px] text-[#C7C5D3]">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    {result.strategies.length} Strategies Ready
-                  </div>
-                  {planHistory.length > 1 && (
-                    <button
-                      onClick={() => setShowPlanHistory(!showPlanHistory)}
-                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-medium text-[#C7C5D3] hover:text-white transition flex items-center gap-1"
-                    >
-                      <Clock className="w-3 h-3" />
-                      {planHistory.length} Plans
-                    </button>
-                  )}
+              <div className="max-w-5xl mx-auto px-4 py-3">
+                {/* Top row: New Plan button prominent */}
+                <div className="flex items-center justify-between">
                   <button
                     onClick={() => {
                       if (!canCreatePlan()) {
@@ -2523,11 +2499,42 @@ ${strategyPages}
                       setAllUserText("");
                       setPhase(selectedEntity ? "welcome" : "entity-select");
                     }}
-                    className="px-3 py-1 rounded-lg bg-[#DC5700]/20 hover:bg-[#DC5700]/30 text-[10px] font-semibold text-[#FFB596] transition flex items-center gap-1"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#DC5700] to-[#FFB596] text-white text-xs font-bold shadow-lg shadow-[#DC5700]/20 hover:shadow-[#DC5700]/40 transition-all hover:scale-[1.02]"
                   >
-                    <Sparkles className="w-3 h-3" />
-                    New Plan ({getRemainingPlans()} left)
+                    <Sparkles className="w-3.5 h-3.5" />
+                    + New Plan
+                    <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-bold">{getRemainingPlans()} left</span>
                   </button>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-[11px] text-[#C7C5D3]">
+                      <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                      {result.strategies.length} Strategies Ready
+                    </div>
+                    {planHistory.length > 1 && (
+                      <button
+                        onClick={() => setShowPlanHistory(!showPlanHistory)}
+                        className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-medium text-[#C7C5D3] hover:text-white transition flex items-center gap-1"
+                      >
+                        <Clock className="w-3 h-3" />
+                        {planHistory.length} Plans
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom row: Plan info */}
+                <div className="flex items-center gap-2 mt-2">
+                  <Sparkles className="w-3.5 h-3.5 text-[#FFB596]" />
+                  <span className="text-xs font-semibold text-[#E4E1E9]">Your Tax Plan</span>
+                  {selectedEntity && (() => {
+                    const eInfo = getEntityInfo(selectedEntity);
+                    return (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" style={{ backgroundColor: `${eInfo.color}15`, color: eInfo.color }}>
+                        {eInfo.label} ({eInfo.formNumber})
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

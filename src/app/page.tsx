@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useCallback } from "react";
 import { useAuth, UserButton } from "@clerk/nextjs";
 import {
@@ -24,8 +24,15 @@ import {
   MessageCircle,
   X,
   Loader2,
+  Sun,
+  Moon,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import InlineTaxCalculator from "@/components/tax-calculator/inline-calculator";
+import { useTheme } from "@/lib/theme-context";
 
 /* ── animation variants ── */
 const fadeInUp = {
@@ -90,8 +97,66 @@ const features = [
   },
 ];
 
+/* ── demo walkthrough slides ── */
+const demoSlides = [
+  {
+    step: "01",
+    title: "Upload Your Tax Documents",
+    subtitle: "Drag & drop W-2s, 1099s, K-1s, and more",
+    description: "Our Azure-powered OCR engine instantly extracts every data point from your documents — income, deductions, withholdings, and more. No manual entry required.",
+    icon: Upload,
+    accent: "from-[#DC5700] to-[#FFB596]",
+    features: ["Supports 40+ document types", "99% OCR accuracy", "3.2s average processing"],
+    mockUI: "document-upload",
+  },
+  {
+    step: "02",
+    title: "AI Analyzes Your Situation",
+    subtitle: "Neural tax engine scans thousands of tax codes",
+    description: "Our AI cross-references your documents against the entire IRC code, state regulations, and recent tax law changes to identify every possible optimization.",
+    icon: Brain,
+    accent: "from-[#4CD6FB] to-[#4CD6FB]/60",
+    features: ["Personalized to your entity type", "Real-time tax law updates", "Multi-year trend analysis"],
+    mockUI: "ai-analysis",
+  },
+  {
+    step: "03",
+    title: "Get Your Smart Plan",
+    subtitle: "Personalized strategies ranked by impact",
+    description: "Receive a comprehensive tax plan with strategies ranked by savings potential, risk level, and implementation complexity — all tailored to your specific situation.",
+    icon: Sparkles,
+    accent: "from-[#BFC2FF] to-[#BFC2FF]/60",
+    features: ["46+ tax strategies", "What-if scenario modeling", "Executive PDF export"],
+    mockUI: "smart-plan",
+  },
+  {
+    step: "04",
+    title: "Chat With Your Tax AI",
+    subtitle: "Ask anything, get expert answers instantly",
+    description: "Have a natural conversation with our AI tax advisor. Ask follow-up questions, explore scenarios, and get personalized guidance — available 24/7.",
+    icon: MessageCircle,
+    accent: "from-[#DC5700] to-[#FFB596]",
+    features: ["Voice input support", "Context-aware responses", "Cites specific tax codes"],
+    mockUI: "tax-chat",
+  },
+  {
+    step: "05",
+    title: "Track Your Savings",
+    subtitle: "Real-time dashboard with projections",
+    description: "Monitor your projected vs. actual tax savings with interactive charts. See exactly how much each strategy is saving you throughout the year.",
+    icon: TrendingUp,
+    accent: "from-[#4CD6FB] to-[#4CD6FB]/60",
+    features: ["Interactive Recharts visualizations", "Year-over-year comparison", "Strategy-level breakdown"],
+    mockUI: "savings",
+  },
+];
+
 export default function Home() {
   const { isSignedIn } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+  const [showDemo, setShowDemo] = useState(false);
+  const [demoSlide, setDemoSlide] = useState(0);
 
   return (
     <div className="min-h-screen bg-[#131318] font-sans">
@@ -130,6 +195,19 @@ export default function Home() {
 
             {/* Auth buttons */}
             <div className="flex items-center gap-3">
+              {/* Dark / Light toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${
+                  isDark
+                    ? "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-yellow-300"
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                }`}
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+
               {isSignedIn ? (
                 <>
                   <Link
@@ -227,7 +305,11 @@ export default function Home() {
                   Start Free Audit
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-                <button className="glass-card inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-semibold text-[#C7C5D3] transition-all hover:bg-[#35343a]/60 hover:text-[#E4E1E9]">
+                <button
+                  onClick={() => { setDemoSlide(0); setShowDemo(true); }}
+                  className="glass-card inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-semibold text-[#C7C5D3] transition-all hover:bg-[#35343a]/60 hover:text-[#E4E1E9]"
+                >
+                  <Play className="h-4 w-4" />
                   View Demo
                 </button>
               </motion.div>
@@ -718,8 +800,280 @@ export default function Home() {
         </div>
       </footer>
 
+      {/* ───────────── DEMO WALKTHROUGH MODAL ───────────── */}
+      <AnimatePresence>
+        {showDemo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+            onClick={() => setShowDemo(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ duration: 0.4, ease: "easeOut" as const }}
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl bg-[#131318] ring-1 ring-white/10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowDemo(false)}
+                className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Slide indicator */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
+                {demoSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDemoSlide(i)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === demoSlide ? "w-8 bg-[#DC5700]" : "w-1.5 bg-white/20 hover:bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Slide content */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={demoSlide}
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -40 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]"
+                >
+                  {/* Left: Info */}
+                  <div className="flex flex-col justify-center p-8 lg:p-12">
+                    <div className="mb-6 flex items-center gap-3">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${demoSlides[demoSlide].accent}`}>
+                        {(() => { const Icon = demoSlides[demoSlide].icon; return <Icon className="h-6 w-6 text-white" />; })()}
+                      </div>
+                      <span className="text-xs font-extrabold tracking-[0.2em] text-[#FFB596] uppercase">
+                        Step {demoSlides[demoSlide].step}
+                      </span>
+                    </div>
+
+                    <h3 className="text-3xl font-extrabold tracking-tight text-[#E4E1E9] mb-2">
+                      {demoSlides[demoSlide].title}
+                    </h3>
+                    <p className="text-sm font-medium text-[#FFB596] mb-4">
+                      {demoSlides[demoSlide].subtitle}
+                    </p>
+                    <p className="text-base leading-relaxed text-[#C7C5D3] mb-6">
+                      {demoSlides[demoSlide].description}
+                    </p>
+
+                    <ul className="space-y-2.5 mb-8">
+                      {demoSlides[demoSlide].features.map((f) => (
+                        <li key={f} className="flex items-center gap-2.5">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#DC5700]/20">
+                            <Check className="h-3 w-3 text-[#FFB596]" />
+                          </div>
+                          <span className="text-sm text-[#C7C5D3]">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* Navigation */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setDemoSlide(Math.max(0, demoSlide - 1))}
+                        disabled={demoSlide === 0}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (demoSlide < demoSlides.length - 1) {
+                            setDemoSlide(demoSlide + 1);
+                          } else {
+                            setShowDemo(false);
+                          }
+                        }}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#DC5700] to-[#FFB596] px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#DC5700]/25 transition-all hover:brightness-110"
+                      >
+                        {demoSlide < demoSlides.length - 1 ? (
+                          <>Next <ChevronRight className="h-4 w-4" /></>
+                        ) : (
+                          <>Get Started <ArrowRight className="h-4 w-4" /></>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setDemoSlide(Math.min(demoSlides.length - 1, demoSlide + 1))}
+                        disabled={demoSlide === demoSlides.length - 1}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right: Mock UI preview */}
+                  <div className="relative hidden lg:flex items-center justify-center bg-gradient-to-br from-[#1B1B20] to-[#0D0D10] p-8 overflow-hidden">
+                    {/* Decorative blur */}
+                    <div className={`absolute top-1/4 right-1/4 w-40 h-40 rounded-full bg-gradient-to-br ${demoSlides[demoSlide].accent} opacity-20 blur-[60px]`} />
+
+                    <DemoMockUI slide={demoSlides[demoSlide].mockUI} />
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ───────────── FLOATING CHATBOT WIDGET ───────────── */}
       <QuickChatBot />
+    </div>
+  );
+}
+
+/* ───────────── DEMO MOCK UI PREVIEWS ───────────── */
+function DemoMockUI({ slide }: { slide: string }) {
+  const mockStyles = "rounded-2xl bg-[#1f1f25] ring-1 ring-white/5 p-5 w-full max-w-xs shadow-xl";
+
+  if (slide === "document-upload") {
+    return (
+      <div className={mockStyles}>
+        <div className="flex items-center gap-2 mb-4">
+          <Upload className="h-4 w-4 text-[#FFB596]" />
+          <span className="text-xs font-bold text-[#E4E1E9]">Document Upload</span>
+        </div>
+        <div className="border-2 border-dashed border-[#DC5700]/30 rounded-xl p-6 text-center mb-3">
+          <FileText className="h-8 w-8 text-[#DC5700]/40 mx-auto mb-2" />
+          <p className="text-xs text-[#908F9C]">Drop files here</p>
+        </div>
+        {["W-2_2024.pdf", "1099-DIV.pdf", "K-1_LLC.pdf"].map((f, i) => (
+          <div key={f} className="flex items-center gap-2.5 py-2 border-b border-white/5 last:border-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#DC5700]/10">
+              <FileText className="h-3.5 w-3.5 text-[#FFB596]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-[#E4E1E9] truncate">{f}</p>
+              <p className="text-[10px] text-[#908F9C]">Processed</p>
+            </div>
+            <Check className="h-3.5 w-3.5 text-green-400" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (slide === "ai-analysis") {
+    return (
+      <div className={mockStyles}>
+        <div className="flex items-center gap-2 mb-4">
+          <Brain className="h-4 w-4 text-[#4CD6FB]" />
+          <span className="text-xs font-bold text-[#E4E1E9]">AI Analysis</span>
+        </div>
+        <div className="space-y-3">
+          {[
+            { label: "Income Sources", value: "3 detected", color: "bg-[#DC5700]" },
+            { label: "Deductions Found", value: "12 opportunities", color: "bg-[#4CD6FB]" },
+            { label: "Tax Credits", value: "4 eligible", color: "bg-[#BFC2FF]" },
+            { label: "Risk Flags", value: "0 issues", color: "bg-green-500" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`h-2 w-2 rounded-full ${item.color}`} />
+                <span className="text-xs text-[#C7C5D3]">{item.label}</span>
+              </div>
+              <span className="text-xs font-semibold text-[#E4E1E9]">{item.value}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 rounded-xl bg-[#DC5700]/10 p-3">
+          <p className="text-[10px] font-bold text-[#FFB596] uppercase tracking-wider mb-1">Projected Savings</p>
+          <p className="text-2xl font-extrabold text-[#FFB596]">$24,850</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (slide === "smart-plan") {
+    return (
+      <div className={mockStyles}>
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-4 w-4 text-[#BFC2FF]" />
+          <span className="text-xs font-bold text-[#E4E1E9]">Smart Plan</span>
+        </div>
+        {[
+          { name: "S-Corp Election", savings: "$8,200", risk: "Low" },
+          { name: "QBI Deduction", savings: "$5,400", risk: "Low" },
+          { name: "Retirement Max", savings: "$4,750", risk: "None" },
+          { name: "Cost Segregation", savings: "$3,800", risk: "Medium" },
+        ].map((s, i) => (
+          <div key={s.name} className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0">
+            <span className="text-xs font-bold text-[#908F9C] w-4">{i + 1}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-[#E4E1E9]">{s.name}</p>
+              <p className="text-[10px] text-[#908F9C]">Risk: {s.risk}</p>
+            </div>
+            <span className="text-xs font-bold text-green-400">{s.savings}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (slide === "tax-chat") {
+    return (
+      <div className={mockStyles}>
+        <div className="flex items-center gap-2 mb-4">
+          <MessageCircle className="h-4 w-4 text-[#DC5700]" />
+          <span className="text-xs font-bold text-[#E4E1E9]">Tax Chat</span>
+        </div>
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <div className="rounded-2xl rounded-br-sm bg-gradient-to-r from-[#DC5700] to-[#FFB596] px-3 py-2 max-w-[80%]">
+              <p className="text-xs text-white">Should I convert to an S-Corp?</p>
+            </div>
+          </div>
+          <div className="flex justify-start">
+            <div className="rounded-2xl rounded-bl-sm bg-[#2a292f] px-3 py-2 max-w-[85%]">
+              <p className="text-xs text-[#C7C5D3]">Based on your $185K income and SE tax of $14,130, an S-Corp election could save you <span className="text-green-400 font-semibold">$8,200/yr</span> by setting a reasonable salary of $95K.</p>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <div className="rounded-2xl rounded-br-sm bg-gradient-to-r from-[#DC5700] to-[#FFB596] px-3 py-2 max-w-[80%]">
+              <p className="text-xs text-white">What about the compliance costs?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // savings
+  return (
+    <div className={mockStyles}>
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="h-4 w-4 text-[#4CD6FB]" />
+        <span className="text-xs font-bold text-[#E4E1E9]">Savings Dashboard</span>
+      </div>
+      <div className="flex items-end gap-1 h-32 mb-3">
+        {[35, 48, 42, 65, 58, 72, 85, 78, 92, 88, 95, 100].map((h, i) => (
+          <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-[#DC5700] to-[#FFB596]" style={{ height: `${h}%`, opacity: 0.3 + (i / 12) * 0.7 }} />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl bg-[#131318] p-3">
+          <p className="text-[10px] text-[#908F9C]">Total Saved</p>
+          <p className="text-lg font-extrabold text-green-400">$24,850</p>
+        </div>
+        <div className="rounded-xl bg-[#131318] p-3">
+          <p className="text-[10px] text-[#908F9C]">Strategies Active</p>
+          <p className="text-lg font-extrabold text-[#FFB596]">7</p>
+        </div>
+      </div>
     </div>
   );
 }
