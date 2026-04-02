@@ -102,41 +102,119 @@
   --sidebar-ring: #dc5700;
 }
 
-/* NO light mode — dark only */
+/* ---- Dark theme (default) ---- */
 .dark {
-  /* Same as root — dark is the only theme */
+  --background: #131318;
+  --foreground: #e4e1e9;
+  --card: #1b1b20;
+  --card-foreground: #e4e1e9;
+  --popover: #1f1f25;
+  --popover-foreground: #e4e1e9;
+  --primary: #ffb596;
+  --primary-foreground: #581e00;
+  --secondary: #3b418f;
+  --secondary-foreground: #bfc2ff;
+  --muted: #1f1f25;
+  --muted-foreground: #c7c5d3;
+  --accent: #2a292f;
+  --accent-foreground: #e4e1e9;
+  --destructive: #ffb4ab;
+  --destructive-foreground: #690005;
+  --border: rgba(70, 70, 81, 0.3);
+  --input: #1f1f25;
+  --ring: #dc5700;
+  --sidebar: #131318;
+  --sidebar-foreground: #e4e1e9;
+  --sidebar-primary: #dc5700;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1b1b20;
+  --sidebar-accent-foreground: #e4e1e9;
+  --sidebar-border: rgba(70, 70, 81, 0.2);
+  --sidebar-ring: #dc5700;
+}
+
+/* ---- Light theme ---- */
+.light {
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --card: #f8f8fa;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --primary: #dc5700;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0ff;
+  --secondary-foreground: #3b418f;
+  --muted: #f4f4f6;
+  --muted-foreground: #64748b;
+  --accent: #f1f1f4;
+  --accent-foreground: #1a1a2e;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: #f4f4f6;
+  --ring: #dc5700;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-primary: #dc5700;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f8f8fa;
+  --sidebar-accent-foreground: #1a1a2e;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-ring: #dc5700;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', var(--font-sans);
-  background-color: #131318;
-  color: #e4e1e9;
+  background-color: var(--background);
+  color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Glass Panel */
-.glass-panel {
+.dark .glass-panel {
   background: rgba(27, 27, 32, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
 
-.glass-card {
+.dark .glass-card {
   background: rgba(31, 31, 37, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 1px solid rgba(255, 255, 255, 0.05);
 }
+.light .glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  border-left: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
 
 /* Mesh Gradient Backgrounds */
-.mesh-gradient {
+.dark .mesh-gradient {
   background: radial-gradient(at 0% 0%, rgba(220, 87, 0, 0.15) 0px, transparent 50%),
               radial-gradient(at 100% 0%, rgba(76, 214, 251, 0.1) 0px, transparent 50%),
               radial-gradient(at 100% 100%, rgba(220, 87, 0, 0.1) 0px, transparent 50%),
               radial-gradient(at 0% 100%, rgba(59, 65, 143, 0.15) 0px, transparent 50%);
+}
+.light .mesh-gradient {
+  background: radial-gradient(at 0% 0%, rgba(220, 87, 0, 0.06) 0px, transparent 50%),
+              radial-gradient(at 100% 0%, rgba(76, 214, 251, 0.04) 0px, transparent 50%),
+              radial-gradient(at 100% 100%, rgba(220, 87, 0, 0.04) 0px, transparent 50%),
+              radial-gradient(at 0% 100%, rgba(59, 65, 143, 0.06) 0px, transparent 50%);
 }
 
 .mesh-gradient-orange {
@@ -149,10 +227,15 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.ai-chat-gradient {
+.dark .ai-chat-gradient {
   background: radial-gradient(ellipse at 20% 50%, rgba(220, 87, 0, 0.06) 0%, transparent 60%),
               radial-gradient(ellipse at 80% 20%, rgba(76, 214, 251, 0.04) 0%, transparent 50%),
               #131318;
+}
+.light .ai-chat-gradient {
+  background: radial-gradient(ellipse at 20% 50%, rgba(220, 87, 0, 0.04) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(76, 214, 251, 0.03) 0%, transparent 50%),
+              #ffffff;
 }
 
 .chart-glow {
@@ -160,11 +243,142 @@ body {
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #35343a; border-radius: 10px; }
+.dark ::-webkit-scrollbar { width: 4px; }
+.dark ::-webkit-scrollbar-track { background: transparent; }
+.dark ::-webkit-scrollbar-thumb { background: #35343a; border-radius: 10px; }
+.light ::-webkit-scrollbar { width: 4px; }
+.light ::-webkit-scrollbar-track { background: transparent; }
+.light ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
 
 /* Selection */
 ::selection {
   background: rgba(255, 181, 150, 0.3);
+}
+
+/* ================================================================
+   Light Mode Global Overrides
+   Automatically remap hardcoded dark colors used in page components
+   so all pages get a clean light mode without per-file changes.
+   ================================================================ */
+
+/* Background overrides */
+.light [class*="bg-[#131318]"] { background-color: #ffffff !important; }
+.light [class*="bg-[#0D0D10]"] { background-color: #f9fafb !important; }
+.light [class*="bg-[#1B1B20]"] { background-color: #f4f4f6 !important; }
+.light [class*="bg-[#1F1F25]"] { background-color: #f1f1f4 !important; }
+.light [class*="bg-[#1f1f25]"] { background-color: #f1f1f4 !important; }
+.light [class*="bg-[#2a292f]"] { background-color: #e5e7eb !important; }
+
+/* Transparent dark backgrounds → light equivalents */
+.light [class*="bg-[rgba(31,31,37"] { background-color: rgba(241, 241, 244, 0.8) !important; }
+.light [class*="bg-[rgba(27,27,32"] { background-color: rgba(248, 248, 250, 0.7) !important; }
+.light [class*="bg-[#35343a]"] { background-color: #e2e8f0 !important; }
+.light [class*="bg-white/5"] { background-color: rgba(0, 0, 0, 0.03) !important; }
+.light [class*="bg-white/10"] { background-color: rgba(0, 0, 0, 0.05) !important; }
+.light [class*="bg-[#1b1b20]"] { background-color: #f4f4f6 !important; }
+.light [class*="bg-[#3B418F]/30"] { background-color: rgba(59, 65, 143, 0.06) !important; }
+.light [class*="bg-[#0e0e13]"] { background-color: #f9fafb !important; }
+
+/* Text colors for very low-opacity white text (invisible on white) */
+.light [class*="text-white/[0.03]"] { color: rgba(0, 0, 0, 0.04) !important; }
+.light [class*="text-white/[0.06]"] { color: rgba(0, 0, 0, 0.06) !important; }
+
+/* Subtle text used in partner logos etc. */
+.light [class*="text-[#464651]"] { color: #94a3b8 !important; }
+
+/* Text overrides — strong contrast for readability on white */
+.light [class*="text-[#E4E1E9]"] { color: #1a1a2e !important; }
+.light [class*="text-[#e4e1e9]"] { color: #1a1a2e !important; }
+.light [class*="text-[#C7C5D3]"] { color: #475569 !important; }
+.light [class*="text-[#c7c5d3]"] { color: #475569 !important; }
+/* text-white → dark, but NOT inside gradient buttons/links/colored backgrounds */
+.light [class*="text-white"]:not([class*="bg-gradient"]):not([class*="from-"]):not([class*="bg-[#DC5700]"]):not([class*="bg-orange"]) { color: #1a1a2e !important; }
+/* Ensure text-white stays white on gradient/colored parent containers */
+.light [class*="bg-gradient"] [class*="text-white"] { color: #ffffff !important; }
+.light [class*="from-[#DC5700]"] [class*="text-white"] { color: #ffffff !important; }
+.light [class*="from-orange"] [class*="text-white"] { color: #ffffff !important; }
+.light [class*="bg-[#DC5700]"] [class*="text-white"] { color: #ffffff !important; }
+.light [class*="bg-orange"] [class*="text-white"] { color: #ffffff !important; }
+
+/* Opacity text variants — boost contrast so they're readable on white */
+.light [class*="text-[#C7C5D3]/50"] { color: #64748b !important; }
+.light [class*="text-[#C7C5D3]/60"] { color: #64748b !important; }
+.light [class*="text-[#C7C5D3]/40"] { color: #94a3b8 !important; }
+.light [class*="text-[#C7C5D3]/30"] { color: #94a3b8 !important; }
+.light [class*="text-[#C7C5D3]/20"] { color: #94a3b8 !important; }
+.light [class*="text-[#C7C5D3]/15"] { color: #cbd5e1 !important; }
+.light [class*="text-[#E4E1E9]/"] { color: #334155 !important; }
+.light [class*="text-[#908F9C]"] { color: #64748b !important; }
+
+/* Keep white text on colored/gradient backgrounds, buttons, and links */
+.light [class*="bg-gradient-to"] [class*="text-white"],
+.light [class*="bg-[#DC5700]"] [class*="text-white"],
+.light [class*="from-orange-600"] [class*="text-white"],
+.light [class*="from-[#DC5700]"] [class*="text-white"] { color: #ffffff !important; }
+.light button[class*="bg-gradient"] { color: #ffffff !important; }
+.light a[class*="bg-gradient"] { color: #ffffff !important; }
+/* IMPORTANT: Do NOT blanket-override bg-gradient-to-r — it kills bg-clip-text gradient text.
+   Only target buttons, links, and elements with explicit text-white that use gradient backgrounds. */
+.light button[class*="bg-gradient-to-r"]:not([class*="bg-clip-text"]) { color: #ffffff !important; }
+.light a[class*="bg-gradient-to-r"]:not([class*="bg-clip-text"]) { color: #ffffff !important; }
+.light div[class*="bg-gradient-to-br"][class*="rounded-xl"] span { color: #ffffff !important; }
+/* Gradient text (bg-clip-text text-transparent) must remain transparent so the gradient shows */
+.light [class*="bg-clip-text"][class*="text-transparent"] { color: transparent !important; -webkit-text-fill-color: transparent !important; }
+/* Buttons & links with gradient bg must keep white text */
+.light button[class*="from-[#DC5700]"] { color: #ffffff !important; }
+.light a[class*="from-[#DC5700]"] { color: #ffffff !important; }
+.light button[class*="from-orange"] { color: #ffffff !important; }
+.light a[class*="from-orange"] { color: #ffffff !important; }
+
+/* Border overrides */
+.light [class*="border-white/5"] { border-color: rgba(0, 0, 0, 0.06) !important; }
+.light [class*="border-white/10"] { border-color: rgba(0, 0, 0, 0.08) !important; }
+.light [class*="border-white/"] { border-color: rgba(0, 0, 0, 0.06) !important; }
+.light [class*="border-slate-800"] { border-color: #e5e7eb !important; }
+
+/* Ring overrides */
+.light [class*="ring-white/5"] { --tw-ring-color: rgba(0, 0, 0, 0.06) !important; }
+.light [class*="ring-white/10"] { --tw-ring-color: rgba(0, 0, 0, 0.08) !important; }
+.light [class*="ring-slate-700"] { --tw-ring-color: #d1d5db !important; }
+
+/* Slate text adjustments */
+.light [class*="text-slate-400"] { color: #64748b !important; }
+.light [class*="text-slate-500"] { color: #94a3b8 !important; }
+.light [class*="text-slate-600"] { color: #94a3b8 !important; }
+.light [class*="text-slate-200"] { color: #334155 !important; }
+.light [class*="text-slate-100"] { color: #1e293b !important; }
+.light [class*="text-slate-300"] { color: #475569 !important; }
+
+/* Hover backgrounds */
+.light [class*="hover:bg-slate-800"]:hover { background-color: #f1f5f9 !important; }
+.light [class*="hover:bg-white/"]:hover { background-color: rgba(0, 0, 0, 0.04) !important; }
+.light [class*="hover:bg-[#35343a]"]:hover { background-color: #e2e8f0 !important; }
+.light [class*="hover:text-[#E4E1E9]"]:hover { color: #1a1a2e !important; }
+.light [class*="hover:text-[#FFB596]"]:hover { color: #dc5700 !important; }
+
+/* Shadow overrides */
+.light [class*="shadow-orange-900"] { --tw-shadow-color: rgba(220, 87, 0, 0.1) !important; }
+
+/* Specific component overrides for light mode */
+.light [class*="bg-[#131318]/80"] { background-color: rgba(255, 255, 255, 0.85) !important; }
+.light [class*="ring-[#131318]"] { --tw-ring-color: #ffffff !important; }
+
+/* Keep brand colors on accent elements */
+.light [class*="text-[#FFB596]"] { color: #dc5700 !important; }
+.light [class*="text-[#DC5700]"] { color: #dc5700 !important; }
+.light [class*="text-[#34D399]"] { color: #059669 !important; }
+.light [class*="text-[#F87171]"] { color: #dc2626 !important; }
+.light [class*="text-[#4CD6FB]"] { color: #0284c7 !important; }
+
+/* Orange brand accents stay consistent */
+.light [class*="text-orange-400"] { color: #ea580c !important; }
+.light [class*="text-orange-500"] { color: #ea580c !important; }
+.light [class*="bg-orange-600/20"] { background-color: rgba(234, 88, 12, 0.08) !important; }
+.light [class*="bg-orange-400/10"] { background-color: rgba(234, 88, 12, 0.04) !important; }
+
+/* Chart tooltip in light mode */
+.light .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  color: #1a1a2e !important;
 }

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/lib/theme-context";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -28,9 +29,11 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
-      <html lang="en" className={`dark ${jakarta.variable} ${geistMono.variable}`}>
-        <body className="min-h-screen bg-[#131318] text-[#e4e1e9] font-sans antialiased">
-          <TooltipProvider>{children}</TooltipProvider>
+      <html lang="en" className={`dark ${jakarta.variable} ${geistMono.variable}`} suppressHydrationWarning>
+        <body className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-sans antialiased">
+          <ThemeProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

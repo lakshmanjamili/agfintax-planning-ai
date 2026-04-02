@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgFinTax Planning AI — Architecture & Technical Document</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #03045e;
+    --orange: #ff6600;
+    --orange-light: #ff8c3a;
+    --dark: #0a0a14;
+    --surface: #12121c;
+    --surface2: #1a1a28;
+    --surface3: #222234;
+    --text: #e4e1e9;
+    --text-dim: #908f9c;
+    --cyan: #4cd6fb;
+    --green: #10b981;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --yellow: #f59e0b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --- COVER --- */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--dark) 50%, #1a0a00 100%);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,102,0,0.08) 0%, transparent 70%);
+    top: 20%; left: 60%;
+    border-radius: 50%;
+  }
+  .cover .tag { color: var(--orange); font-size: 0.85rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1rem; }
+  .cover h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; }
+  .cover h1 span { background: linear-gradient(135deg, var(--orange), var(--orange-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .cover .subtitle { font-size: 1.15rem; color: var(--text-dim); max-width: 640px; margin-bottom: 2.5rem; }
+  .cover .meta { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; font-size: 0.8rem; color: var(--text-dim); }
+  .cover .meta div { display: flex; align-items: center; gap: 0.4rem; }
+  .cover .meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+
+  /* --- NAV --- */
+  .toc-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,20,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 0.6rem 2rem;
+    display: flex; gap: 1.2rem; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toc-bar::-webkit-scrollbar { display: none; }
+  .toc-bar a {
+    color: var(--text-dim); text-decoration: none; font-size: 0.75rem; font-weight: 500;
+    white-space: nowrap; padding: 0.3rem 0.6rem; border-radius: 4px; transition: all 0.2s;
+  }
+  .toc-bar a:hover { color: var(--orange); background: rgba(255,102,0,0.08); }
+
+  /* --- SECTIONS --- */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+  section { padding: 4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+  .section-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--orange); margin-bottom: 0.5rem;
+  }
+  h2 { font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; line-height: 1.25; }
+  h3 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.75rem; color: var(--cyan); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: var(--text); }
+
+  p { margin-bottom: 1rem; color: var(--text); font-size: 0.92rem; }
+  p.dim { color: var(--text-dim); }
+
+  /* --- DIAGRAM CONTAINER --- */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .diagram-wrap .mermaid { display: flex; justify-content: center; }
+  .diagram-caption {
+    text-align: center; font-size: 0.75rem; color: var(--text-dim);
+    margin-top: 1rem; font-style: italic;
+  }
+
+  /* --- TABLES --- */
+  table {
+    width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem;
+    font-size: 0.85rem;
+  }
+  th {
+    text-align: left; padding: 0.7rem 1rem;
+    background: var(--surface2); color: var(--orange); font-weight: 600;
+    border-bottom: 2px solid rgba(255,102,0,0.2);
+  }
+  td {
+    padding: 0.6rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text); vertical-align: top;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* --- CARDS --- */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .card .card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .card .card-body { font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; }
+  .card.highlight { border-left: 3px solid var(--orange); }
+  .card.green { border-left: 3px solid var(--green); }
+  .card.cyan { border-left: 3px solid var(--cyan); }
+  .card.purple { border-left: 3px solid var(--purple); }
+  .card.red { border-left: 3px solid var(--red); }
+  .card.yellow { border-left: 3px solid var(--yellow); }
+
+  /* --- BADGES --- */
+  .badge {
+    display: inline-block; font-size: 0.65rem; font-weight: 600;
+    padding: 0.15rem 0.5rem; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .badge.orange { background: rgba(255,102,0,0.15); color: var(--orange); }
+  .badge.cyan { background: rgba(76,214,251,0.12); color: var(--cyan); }
+  .badge.green { background: rgba(16,185,129,0.12); color: var(--green); }
+  .badge.purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+  .badge.red { background: rgba(239,68,68,0.12); color: var(--red); }
+  .badge.yellow { background: rgba(245,158,11,0.12); color: var(--yellow); }
+
+  /* --- CODE --- */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--cyan);
+  }
+
+  /* --- FEATURE LIST --- */
+  .feature-list { list-style: none; padding: 0; }
+  .feature-list li {
+    padding: 0.5rem 0 0.5rem 1.5rem;
+    position: relative;
+    font-size: 0.88rem;
+    color: var(--text);
+  }
+  .feature-list li::before {
+    content: '';
+    position: absolute; left: 0; top: 0.85rem;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange);
+  }
+  .feature-list li.done::before { background: var(--green); }
+  .feature-list li.planned::before { background: var(--yellow); }
+  .feature-list li.idea::before { background: var(--purple); }
+
+  /* --- STATS ROW --- */
+  .stats-row { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.5rem 0; }
+  .stat-box {
+    flex: 1; min-width: 140px;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .stat-box .number { font-size: 2rem; font-weight: 800; color: var(--orange); }
+  .stat-box .label { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* --- ROADMAP --- */
+  .roadmap-item {
+    display: flex; gap: 1rem; margin-bottom: 1.5rem; position: relative;
+    padding-left: 2rem;
+  }
+  .roadmap-item::before {
+    content: '';
+    position: absolute; left: 0.45rem; top: 1.8rem; bottom: -1.5rem;
+    width: 2px; background: rgba(255,255,255,0.06);
+  }
+  .roadmap-item:last-child::before { display: none; }
+  .roadmap-dot {
+    position: absolute; left: 0; top: 0.5rem;
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid var(--orange);
+    background: var(--dark);
+  }
+  .roadmap-item.done .roadmap-dot { background: var(--green); border-color: var(--green); }
+  .roadmap-item .roadmap-content { flex: 1; }
+  .roadmap-item .roadmap-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem; }
+  .roadmap-item .roadmap-desc { font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; }
+
+  .footer { text-align: center; padding: 3rem 2rem; font-size: 0.75rem; color: var(--text-dim); }
+  .footer a { color: var(--orange); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .cover h1 { font-size: 2.2rem; }
+    h2 { font-size: 1.5rem; }
+    .card-grid { grid-template-columns: 1fr; }
+    .stats-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== COVER ========== -->
+<div class="cover">
+  <div class="tag">Technical Architecture Document</div>
+  <h1>AgFinTax <span>Planning AI</span></h1>
+  <p class="subtitle">Full system architecture, data flow diagrams, feature inventory, and strategic roadmap for the AI-powered tax planning platform built for AG FinTax.</p>
+  <div class="meta">
+    <div><span class="dot"></span> Version 1.0</div>
+    <div><span class="dot"></span> March 2026</div>
+    <div><span class="dot"></span> Built & Powered by LoukriAI.com</div>
+  </div>
+</div>
+
+<!-- ========== NAV ========== -->
+<nav class="toc-bar">
+  <a href="#overview">Overview</a>
+  <a href="#system-arch">System Architecture</a>
+  <a href="#data-flow">Data Flow</a>
+  <a href="#ai-pipeline">AI Pipeline</a>
+  <a href="#tax-engine">Tax Engine</a>
+  <a href="#voice">Voice System</a>
+  <a href="#ocr">Document Intelligence</a>
+  <a href="#frontend">Frontend</a>
+  <a href="#features">Feature Inventory</a>
+  <a href="#gaps">Gaps & Opportunities</a>
+  <a href="#roadmap">Roadmap</a>
+</nav>
+
+<div class="container">
+
+<!-- ========== 1. OVERVIEW ========== -->
+<section id="overview">
+  <div class="section-label">01 / Overview</div>
+  <h2>What We're Building</h2>
+  <p>AgFinTax Planning AI is not a chatbot that regurgitates tax tips. It is a structured, intake-driven planning engine that profiles a client's full financial picture — via voice, document upload, or guided Q&A — and maps them to 57 specific, actionable tax strategies with real dollar estimates, IRC citations, and implementation roadmaps.</p>
+  <p>Think of it as the brain of a senior tax advisor who knows every strategy in the Corvée 2024 Tax Strategies Masterclass, has memorized the 2025 tax code, and never forgets to ask the right qualifying question.</p>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="number">57</div><div class="label">Tax Strategies</div></div>
+    <div class="stat-box"><div class="number">7</div><div class="label">API Endpoints</div></div>
+    <div class="stat-box"><div class="number">5</div><div class="label">Entity Types</div></div>
+    <div class="stat-box"><div class="number">16</div><div class="label">Tax Intents</div></div>
+    <div class="stat-box"><div class="number">26</div><div class="label">Document Types</div></div>
+    <div class="stat-box"><div class="number">14</div><div class="label">Qualification Sections</div></div>
+  </div>
+
+  <h3>Tech Stack at a Glance</h3>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+    <tr><td>Framework</td><td>Next.js 16, React 19, TypeScript 5</td><td>Full-stack SSR/App Router</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS v4, Framer Motion</td><td>Design system + animations</td></tr>
+    <tr><td>Auth</td><td>Clerk</td><td>Authentication, session management</td></tr>
+    <tr><td>Database</td><td>Supabase (PostgreSQL)</td><td>Persistent storage</td></tr>
+    <tr><td>AI Routing</td><td>OpenRouter → Claude Sonnet 4 / GPT-4o</td><td>All LLM calls with failover</td></tr>
+    <tr><td>Voice STT</td><td>OpenAI Whisper + Web Speech API</td><td>Transcription + live preview</td></tr>
+    <tr><td>Voice TTS</td><td>OpenAI TTS (<code>tts-1</code>, <code>nova</code>)</td><td>Natural voice output</td></tr>
+    <tr><td>OCR</td><td>Azure Document Intelligence</td><td>Tax form extraction with 15 specialized models</td></tr>
+    <tr><td>Charts</td><td>Recharts</td><td>Tax savings visualization</td></tr>
+    <tr><td>UI</td><td>shadcn/ui + Radix primitives</td><td>Accessible component library</td></tr>
+  </table>
+</section>
+
+<!-- ========== 2. SYSTEM ARCHITECTURE ========== -->
+<section id="system-arch">
+  <div class="section-label">02 / System Architecture</div>
+  <h2>High-Level System Diagram</h2>
+  <p>The platform is a monolithic Next.js application with clear separation between the client-side React app, server-side API routes, and external services. All AI, OCR, and voice processing happens server-side to protect API keys and enable streaming.</p>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+graph TB
+    subgraph CLIENT["Browser — React 19 + Next.js App Router"]
+        LP["Landing Page"]
+        AUTH["Sign In / Sign Up<br/>(Clerk Hosted UI)"]
+        DASH["Dashboard Shell<br/>Sidebar + Header"]
+        PROFILE["Profile Builder<br/>6-step wizard + OCR upload"]
+        SMART["Smart Plan<br/>AI interview + voice"]
+        CHAT["Tax Chat<br/>Streaming Q&A"]
+        DOCS["Document Manager<br/>Upload + classify"]
+        STRATS["Strategy Explorer<br/>57 strategies, filterable"]
+        SAVINGS["Savings Dashboard<br/>Charts + totals"]
+        REVIEW["Tax Review<br/>Red/green flag audit"]
+        VOICE["Voice Interview UI<br/>Waveform + controls"]
+    end
+
+    subgraph API["Next.js API Routes (Server-Side)"]
+        A1["/api/chat<br/>Streaming tax Q&A"]
+        A2["/api/smart-plan<br/>Plan generation"]
+        A3["/api/profile-ocr<br/>Document → Profile"]
+        A4["/api/documents/process<br/>OCR + classify"]
+        A5["/api/documents/upload<br/>File storage"]
+        A6["/api/transcribe<br/>Speech → Text"]
+        A7["/api/tts<br/>Text → Speech"]
+    end
+
+    subgraph EXTERNAL["External Services"]
+        CLERK["Clerk<br/>Auth & Sessions"]
+        SUPA["Supabase<br/>PostgreSQL + Storage"]
+        OR["OpenRouter<br/>Claude Sonnet 4<br/>GPT-4o"]
+        OAI["OpenAI<br/>Whisper + TTS"]
+        AZURE["Azure Doc Intelligence<br/>15 Tax Form Models"]
+    end
+
+    subgraph ENGINE["Tax Planning Engine (lib/)"]
+        E1["Smart Plan Engine<br/>16 intents, coverage tracking"]
+        E2["57 Master Strategies<br/>Eligibility, savings formulas"]
+        E3["Qualification Engine<br/>14 interview sections"]
+        E4["Savings Calculator<br/>2025 brackets, estimates"]
+        E5["Plan Store<br/>Profile, plans, documents"]
+        E6["Document Classifier<br/>26 tax document types"]
+        E7["Tax System Prompt<br/>2025 tax law expertise"]
+    end
+
+    LP --> AUTH
+    AUTH --> DASH
+    DASH --> PROFILE & SMART & CHAT & DOCS & STRATS & SAVINGS & REVIEW
+    SMART --> VOICE
+
+    PROFILE --> A3
+    SMART --> A1 & A2
+    CHAT --> A1
+    DOCS --> A4 & A5
+    VOICE --> A6 & A7
+
+    A1 --> OR
+    A2 --> OR
+    A3 --> AZURE & OR
+    A4 --> AZURE & OR
+    A6 --> OAI
+    A7 --> OAI
+
+    A1 --> E7
+    A2 --> E1 & E2 & E4
+    A3 --> E6
+    A4 --> E6
+
+    AUTH -.-> CLERK
+    E5 -.-> SUPA
+
+    style CLIENT fill:#12121c,stroke:#ff6600,stroke-width:2px,color:#e4e1e9
+    style API fill:#1a1a28,stroke:#4cd6fb,stroke-width:2px,color:#e4e1e9
+    style EXTERNAL fill:#1a1a28,stroke:#8b5cf6,stroke-width:2px,color:#e4e1e9
+    style ENGINE fill:#1a1a28,stroke:#10b981,stroke-width:2px,color:#e4e1e9
+    </pre>
+    <div class="diagram-caption">Fig 1. Full system architecture — Client, API layer, Tax Engine, and External Services</div>
+  </div>
+
+  <h3>API Route Map</h3>
+  <table>
+    <tr><th>Endpoint</th><th>Method</th><th>External Service</th><th>Purpose</th></tr>
+    <tr><td><code>/api/chat</code></td><td>POST (SSE)</td><td>OpenRouter</td><td>Streaming tax advice with system prompt context</td></tr>
+    <tr><td><code>/api/smart-plan</code></td><td>POST</td><td>OpenRouter</td><td>Generate ranked strategy plan with savings estimates</td></tr>
+    <tr><td><code>/api/profile-ocr</code></td><td>POST</td><td>Azure + OpenRouter</td><td>Extract full client profile from tax return upload</td></tr>
+    <tr><td><code>/api/documents/process</code></td><td>POST</td><td>Azure + OpenRouter</td><td>OCR + classify + extract structured fields</td></tr>
+    <tr><td><code>/api/documents/upload</code></td><td>POST</td><td>Supabase Storage</td><td>Persist uploaded files (stub, ready for production)</td></tr>
+    <tr><td><code>/api/transcribe</code></td><td>POST</td><td>OpenAI Whisper</td><td>Audio → text with tax vocabulary prompt</td></tr>
+    <tr><td><code>/api/tts</code></td><td>POST</td><td>OpenAI TTS</td><td>Text → natural speech (MP3 stream)</td></tr>
+  </table>
+</section>
+
+<!-- ========== 3. DATA FLOW ========== -->
+<section id="data-flow">
+  <div class="section-label">03 / Data Flow</div>
+  <h2>Client Journey — End to End</h2>
+  <p>A client's journey through AgFinTax isn't a single chat session. It's a multi-channel intake process where every interaction — voice answer, uploaded document, chat message — feeds into a unified client profile that progressively unlocks more precise strategy recommendations.</p>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+flowchart LR
+    subgraph INTAKE["Intake Channels"]
+        V["Voice Interview<br/>14 sections"]
+        D["Document Upload<br/>Tax returns, W-2s, K-1s"]
+        C["Chat Conversation<br/>Free-form Q&A"]
+        F["Profile Form<br/>6-step wizard"]
+    end
+
+    subgraph PROCESSING["Processing Layer"]
+        STT["Whisper STT"]
+        OCR["Azure OCR<br/>15 specialized models"]
+        NLP["Intent Detection<br/>16 tax intents"]
+        CLASS["Doc Classifier<br/>26 types"]
+    end
+
+    subgraph PROFILE["Unified Client Profile"]
+        P["ClientProfile Object<br/>Personal + Business + Financial<br/>+ OCR data + Document intelligence"]
+    end
+
+    subgraph PLANNING["Planning Engine"]
+        QUAL["Qualification Engine<br/>Strategy filtering"]
+        CALC["Savings Calculator<br/>2025 tax brackets"]
+        AI["AI Plan Generator<br/>Entity-specific prompts"]
+    end
+
+    subgraph OUTPUT["Client Deliverables"]
+        PLAN["Personalized Tax Plan<br/>Ranked strategies + $$$"]
+        DASH2["Savings Dashboard<br/>Charts + breakdown"]
+        REV["Tax Review<br/>Red/green flags"]
+    end
+
+    V --> STT --> NLP
+    D --> OCR --> CLASS
+    C --> NLP
+    F --> P
+
+    NLP --> P
+    CLASS --> P
+
+    P --> QUAL
+    P --> CALC
+    P --> AI
+
+    QUAL --> AI
+    CALC --> AI
+
+    AI --> PLAN
+    PLAN --> DASH2
+    PLAN --> REV
+
+    style INTAKE fill:#1a1a28,stroke:#ff6600,stroke-width:1px,color:#e4e1e9
+    style PROCESSING fill:#1a1a28,stroke:#4cd6fb,stroke-width:1px,color:#e4e1e9
+    style PROFILE fill:#1a1a28,stroke:#10b981,stroke-width:2px,color:#e4e1e9
+    style PLANNING fill:#1a1a28,stroke:#8b5cf6,stroke-width:1px,color:#e4e1e9
+    style OUTPUT fill:#1a1a28,stroke:#f59e0b,stroke-width:1px,color:#e4e1e9
+    </pre>
+    <div class="diagram-caption">Fig 2. Data flow from multi-channel intake to personalized tax plan output</div>
+  </div>
+
+  <h3>Profile Completeness Scoring</h3>
+  <p>The system tracks profile readiness as a percentage, gating plan generation behind meaningful data thresholds. Each component has a weight, and together they determine how precise the strategy recommendations can be.</p>
+  <table>
+    <tr><th>Component</th><th>Weight</th><th>What It Unlocks</th></tr>
+    <tr><td>Entity Type</td><td>10%</td><td>Filters all 57 strategies to applicable subset</td></tr>
+    <tr><td>Occupation</td><td>10%</td><td>R&D credit eligibility, industry-specific strategies</td></tr>
+    <tr><td>Filing Status</td><td>10%</td><td>Bracket optimization, credit eligibility</td></tr>
+    <tr><td>Annual Income</td><td>15%</td><td>Marginal rate calculation, strategy savings estimates</td></tr>
+    <tr><td>Income Sources</td><td>10%</td><td>W-2 vs 1099 strategies, SE tax optimization</td></tr>
+    <tr><td>State</td><td>10%</td><td>SALT workaround, PTE election, state-specific planning</td></tr>
+    <tr><td>Dependents</td><td>5%</td><td>Child tax credit, family hiring, dependent care</td></tr>
+    <tr><td>Priorities</td><td>10%</td><td>Strategy ranking and emphasis</td></tr>
+    <tr><td>Financial Flags</td><td>10%</td><td>Real estate, retirement, investment strategies</td></tr>
+    <tr><td>Documents</td><td>10%</td><td>Precise numbers from actual returns for calculation</td></tr>
+  </table>
+</section>
+
+<!-- ========== 4. AI PIPELINE ========== -->
+<section id="ai-pipeline">
+  <div class="section-label">04 / AI Pipeline</div>
+  <h2>How the AI Actually Works</h2>
+  <p>This isn't "send user message to GPT and hope for the best." Every AI call has a specific purpose, a tailored system prompt, entity-specific context, and structured output parsing with fallback logic.</p>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+flowchart TD
+    subgraph MODELS["Model Selection & Failover"]
+        M1["Claude Sonnet 4<br/>Primary — Chat, Planning, Extraction"]
+        M2["Claude 3.5 Sonnet<br/>Fallback 1"]
+        M3["GPT-4o Mini<br/>Fallback 2"]
+        M4["GPT-4o<br/>Classification only"]
+    end
+
+    subgraph PROMPTS["Purpose-Built System Prompts"]
+        P1["Tax System Prompt<br/>3000+ chars, 2025 law, 10 strategies<br/>Tone: professional, proactive"]
+        P2["Conversation Prompt<br/>Entity-specific context<br/>Uncovered intents list<br/>SUGGESTIONS block required"]
+        P3["Plan Generation Prompt<br/>Marginal rate injected<br/>Pre-matched strategies<br/>Entity focus areas"]
+        P4["Answer Interpretation<br/>Structured JSON output<br/>Confidence + clarification"]
+        P5["Document Classification<br/>26 tax types<br/>JSON response forced"]
+    end
+
+    subgraph OUTPUT["Output Handling"]
+        O1["SSE Streaming<br/>Real-time chat display"]
+        O2["JSON Parsing<br/>+ Repair Logic<br/>Strip fences, fix commas<br/>Auto-close brackets"]
+        O3["Structured Extraction<br/>Fields + confidence scores"]
+    end
+
+    P1 --> M1
+    P2 --> M1
+    P3 --> M1
+    P4 --> M1
+    P5 --> M4
+
+    M1 -- "fails" --> M2
+    M2 -- "fails" --> M3
+
+    M1 --> O1
+    M1 --> O2
+    M4 --> O3
+
+    style MODELS fill:#1a1a28,stroke:#8b5cf6,stroke-width:1px,color:#e4e1e9
+    style PROMPTS fill:#1a1a28,stroke:#ff6600,stroke-width:1px,color:#e4e1e9
+    style OUTPUT fill:#1a1a28,stroke:#10b981,stroke-width:1px,color:#e4e1e9
+    </pre>
+    <div class="diagram-caption">Fig 3. AI pipeline — model routing, prompt engineering, and output handling</div>
+  </div>
+
+  <h3>Key Design Decisions</h3>
+  <div class="card-grid">
+    <div class="card highlight">
+      <div class="card-title">Low Temperature (0.1–0.3)</div>
+      <div class="card-body">Tax advice demands accuracy, not creativity. Chat uses 0.3 for slight warmth; extraction and classification use 0.1 for near-deterministic output.</div>
+    </div>
+    <div class="card cyan">
+      <div class="card-title">3-Model Failover Chain</div>
+      <div class="card-body">Claude Sonnet 4 → Claude 3.5 Sonnet → GPT-4o Mini. Each model gets a 45-second timeout. Users never see "AI unavailable" errors.</div>
+    </div>
+    <div class="card green">
+      <div class="card-title">JSON Repair Logic</div>
+      <div class="card-body">LLMs sometimes output malformed JSON. The plan generator strips markdown fences, removes trailing commas, auto-closes unclosed structures, and validates required fields.</div>
+    </div>
+    <div class="card purple">
+      <div class="card-title">Entity-Specific Prompts</div>
+      <div class="card-body">An S-Corp owner gets prompted about reasonable compensation and FICA savings. A C-Corp gets QSBS exclusion and retained earnings. Never generic advice.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 5. TAX ENGINE ========== -->
+<section id="tax-engine">
+  <div class="section-label">05 / Tax Planning Engine</div>
+  <h2>The Brain — Strategy Matching & Qualification</h2>
+  <p>The tax engine is the core IP of the platform. It's what makes AgFinTax different from typing "how do I save on taxes" into ChatGPT. It's structured, exhaustive, and qualification-aware.</p>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+flowchart TD
+    PROFILE["Client Profile<br/>Entity + Income + Flags"]
+
+    PROFILE --> FILTER["Entity Filter<br/>57 strategies → applicable subset"]
+    FILTER --> INTENT["Intent Coverage Check<br/>16 intents tracked<br/>All 3 critical + 2 high required"]
+
+    INTENT -- "Not Ready" --> ASK["Ask Next Question<br/>Priority: critical → high → medium"]
+    ASK --> PROFILE
+
+    INTENT -- "Ready" --> QUAL["Qualification Interview<br/>14 sections, conditional"]
+
+    QUAL --> DISQ{"Disqualification<br/>Check"}
+    DISQ -- "NO to key Q" --> OUT["Remove Strategy"]
+    DISQ -- "Passes" --> KEEP["Keep Strategy"]
+
+    KEEP --> CALC["Savings Calculator<br/>Marginal rate × strategy formula"]
+    CALC --> RANK["Rank by Savings<br/>High → Low"]
+    RANK --> PLAN["Personalized Tax Plan<br/>Strategies + $$$ + Steps"]
+
+    style PROFILE fill:#1a1a28,stroke:#ff6600,stroke-width:2px,color:#e4e1e9
+    style PLAN fill:#1a1a28,stroke:#10b981,stroke-width:2px,color:#e4e1e9
+    </pre>
+    <div class="diagram-caption">Fig 4. Strategy matching pipeline — from raw profile to ranked, qualified plan</div>
+  </div>
+
+  <h3>The 12 Strategy Categories</h3>
+  <div class="card-grid">
+    <div class="card highlight"><div class="card-title">Retirement (6)</div><div class="card-body">401(k) max, Roth 401(k), Cash Balance Pension, SEP IRA, Solo 401(k), Profit Sharing</div></div>
+    <div class="card cyan"><div class="card-title">Compensation (5)</div><div class="card-body">Reasonable Comp (S-Corp), SE Health Insurance, Accountable Plan, Fringe Benefits, Education Assistance</div></div>
+    <div class="card green"><div class="card-title">Family (3)</div><div class="card-body">Hiring Children, Family Management Company, MERP / Section 125 Cafeteria Plan</div></div>
+    <div class="card purple"><div class="card-title">Real Estate (4)</div><div class="card-body">1031 Exchange, Cost Segregation, REPS Status, Installment Sale (453)</div></div>
+    <div class="card yellow"><div class="card-title">Depreciation (2)</div><div class="card-body">Section 179 Expensing ($1.29M limit), 100% Bonus Depreciation (2025)</div></div>
+    <div class="card red"><div class="card-title">Deductions (5+)</div><div class="card-body">Home Office, Augusta Rule, Business Meals, Travel, Vehicle Mileage, Itemized Optimizer</div></div>
+    <div class="card highlight"><div class="card-title">Credits (5)</div><div class="card-body">Child Tax Credit, R&D Credit (Sec. 41), Dependent Care, Work Opportunity, FICA Tip</div></div>
+    <div class="card cyan"><div class="card-title">Entity Structure (5)</div><div class="card-body">S-Corp Election, Late S-Corp, C-Corp Election, Partnership, Schedule C</div></div>
+    <div class="card green"><div class="card-title">Charitable (4)</div><div class="card-body">Charitable Optimization, Donor-Advised Fund, QCD (age 70.5+), Private Foundation</div></div>
+    <div class="card purple"><div class="card-title">Medical (2)</div><div class="card-body">HSA Triple Tax Advantage, MERP / ICHRA</div></div>
+    <div class="card yellow"><div class="card-title">Education (2)</div><div class="card-body">529 / Coverdell Plans, AOTC / Lifetime Learning Credits</div></div>
+    <div class="card red"><div class="card-title">Investment & Other (8+)</div><div class="card-body">Tax-Loss Harvesting, QOZ Deferral, Roth Conversion, IC-DISC, Captive Insurance, Oil & Gas, Sale of Home Exclusion</div></div>
+  </div>
+
+  <h3>Intent Detection System</h3>
+  <p>The Smart Plan Engine tracks 16 tax-relevant topics across every user interaction. Before generating a plan, it gates on coverage — requiring all 3 critical intents and at least 2 high-priority intents.</p>
+  <table>
+    <tr><th>Priority</th><th>Intents</th><th>Why It Matters</th></tr>
+    <tr><td><span class="badge red">Critical</span></td><td>Income Level, Filing Status, Occupation</td><td>Can't calculate any savings without these three</td></tr>
+    <tr><td><span class="badge orange">High</span></td><td>Self-Employment, Dependents, Real Estate, Retirement</td><td>Unlock the highest-value strategy categories</td></tr>
+    <tr><td><span class="badge yellow">Medium</span></td><td>Health Insurance, Investments, Home Office, Charitable, State, Education, International, Depreciation</td><td>Refine recommendations and catch niche opportunities</td></tr>
+    <tr><td><span class="badge green">Low</span></td><td>Vehicles</td><td>Business mileage deduction — useful but rarely a game-changer</td></tr>
+  </table>
+</section>
+
+<!-- ========== 6. VOICE SYSTEM ========== -->
+<section id="voice">
+  <div class="section-label">06 / Voice System</div>
+  <h2>Two-Way Voice Interview</h2>
+  <p>The voice system isn't bolt-on dictation. It's a full two-way conversation where the AI speaks questions, listens for answers, interprets natural language responses, and advances through a structured qualification flow — with silence detection, muting, skipping, and section transitions.</p>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+stateDiagram-v2
+    [*] --> idle
+    idle --> speaking: startInterview()
+    speaking --> listening: TTS audio ends
+    listening --> processing: Silence detected (2.5s) or user stops
+    processing --> speaking: Answer recorded, next question
+    processing --> speaking: Clarification needed
+    processing --> transitioning: Section complete
+    transitioning --> speaking: Next section intro
+    processing --> complete: All sections done
+    complete --> [*]
+
+    note right of speaking: AI voice via OpenAI TTS\n"nova" voice, 1.05x speed
+    note right of listening: MediaRecorder captures audio\nWeb Speech API shows live transcript
+    note right of processing: Whisper transcribes → AI interprets\nJSON: answer + confidence + clarify?
+    </pre>
+    <div class="diagram-caption">Fig 5. Voice interview state machine — the full lifecycle of a voice-guided tax intake</div>
+  </div>
+
+  <h3>Voice Architecture Components</h3>
+  <table>
+    <tr><th>Component</th><th>Technology</th><th>Role</th></tr>
+    <tr><td>Question Generation</td><td>OpenAI TTS (<code>tts-1</code>, <code>nova</code>)</td><td>Converts AI question text to natural speech, streamed as MP3</td></tr>
+    <tr><td>Live Preview</td><td>Web Speech API (browser)</td><td>Shows real-time transcript while user is speaking</td></tr>
+    <tr><td>Audio Capture</td><td>MediaRecorder API</td><td>Records WebM/Opus audio blob for server transcription</td></tr>
+    <tr><td>Transcription</td><td>OpenAI Whisper</td><td>Server-side audio → text with tax vocabulary prompt</td></tr>
+    <tr><td>Answer Interpretation</td><td>Claude Sonnet 4 (via /api/chat)</td><td>Maps natural language to structured answer + confidence score</td></tr>
+    <tr><td>Silence Detection</td><td>Web Speech API timestamps</td><td>2.5-second gap triggers auto-stop recording</td></tr>
+    <tr><td>Browser Fallback</td><td>window.speechSynthesis</td><td>If OpenAI TTS fails, falls back to browser-native speech</td></tr>
+  </table>
+</section>
+
+<!-- ========== 7. OCR ========== -->
+<section id="ocr">
+  <div class="section-label">07 / Document Intelligence</div>
+  <h2>OCR Pipeline — From Paper to Profile</h2>
+  <p>The document processing pipeline doesn't just "read" a PDF. It selects the right specialized Azure model for each tax form, extracts structured fields with confidence scores, classifies the document type via AI, and feeds the extracted data back into the unified client profile.</p>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+flowchart LR
+    UP["Upload<br/>PDF / Image"] --> DETECT["Type Detection<br/>Filename hints +<br/>AI classification"]
+
+    DETECT --> MODEL{"Select Azure Model"}
+
+    MODEL -- "W-2" --> W2["prebuilt-tax.us.w2"]
+    MODEL -- "1099-NEC" --> N["prebuilt-tax.us.1099NEC"]
+    MODEL -- "1099-INT" --> I["prebuilt-tax.us.1099Int"]
+    MODEL -- "1099-DIV" --> D["prebuilt-tax.us.1099Div"]
+    MODEL -- "1098" --> M["prebuilt-tax.us.1098"]
+    MODEL -- "Invoice" --> INV["prebuilt-invoice"]
+    MODEL -- "Other" --> LAY["prebuilt-layout"]
+
+    W2 & N & I & D & M & INV & LAY --> EXTRACT["Extract Text<br/>+ Structured Fields<br/>+ Tables"]
+
+    EXTRACT --> CHUNK{"Pages > 2?<br/>(Free tier)"}
+    CHUNK -- "Yes" --> BATCH["Batch remaining<br/>pages in 2-page chunks"]
+    CHUNK -- "No" --> CLASSIFY
+
+    BATCH --> CLASSIFY["AI Classification<br/>GPT-4o → 26 types"]
+    CLASSIFY --> MERGE["Merge into<br/>Client Profile"]
+
+    style UP fill:#1a1a28,stroke:#ff6600,stroke-width:1px,color:#e4e1e9
+    style MERGE fill:#1a1a28,stroke:#10b981,stroke-width:2px,color:#e4e1e9
+    </pre>
+    <div class="diagram-caption">Fig 6. Document intelligence pipeline — model selection, extraction, classification, and profile merge</div>
+  </div>
+
+  <h3>Supported Tax Form Models</h3>
+  <p>Azure Document Intelligence provides specialized pre-trained models for 15 tax form types. Each model knows the exact field layout of that form and extracts named fields (e.g., W-2 Box 1 Wages, Box 2 Federal Tax Withheld) with per-field confidence scores.</p>
+  <table>
+    <tr><th>Form</th><th>Azure Model</th><th>Key Fields Extracted</th></tr>
+    <tr><td>W-2</td><td><code>prebuilt-tax.us.w2</code></td><td>Employer, Wages, Tax Withheld, State, SS Wages</td></tr>
+    <tr><td>1099-NEC</td><td><code>prebuilt-tax.us.1099NEC</code></td><td>Payer, Nonemployee Compensation, Federal Tax</td></tr>
+    <tr><td>1099-INT</td><td><code>prebuilt-tax.us.1099Int</code></td><td>Payer, Interest Income, Tax-Exempt Interest</td></tr>
+    <tr><td>1099-DIV</td><td><code>prebuilt-tax.us.1099Div</code></td><td>Ordinary Dividends, Qualified Dividends, Capital Gains</td></tr>
+    <tr><td>1098</td><td><code>prebuilt-tax.us.1098</code></td><td>Mortgage Interest, Points, Property Tax</td></tr>
+    <tr><td>1098-E / 1098-T</td><td>Specialized models</td><td>Student Loan Interest / Tuition Paid</td></tr>
+    <tr><td>All 1099 variants</td><td>Specialized per type</td><td>Form-specific amounts, EINs, dates</td></tr>
+    <tr><td>Invoice / Receipt</td><td><code>prebuilt-invoice</code> / <code>prebuilt-receipt</code></td><td>Line items, totals, vendor info</td></tr>
+    <tr><td>Everything else</td><td><code>prebuilt-layout</code></td><td>Full text, tables, page structure</td></tr>
+  </table>
+</section>
+
+<!-- ========== 8. FRONTEND ========== -->
+<section id="frontend">
+  <div class="section-label">08 / Frontend Architecture</div>
+  <h2>Component & Page Structure</h2>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+graph TD
+    ROOT["RootLayout<br/>ClerkProvider + Fonts"]
+    ROOT --> LP["/ Landing Page<br/>Hero + Features + QuickBot"]
+    ROOT --> ABOUT["/about<br/>Anil Grandhi + Services"]
+    ROOT --> SIGNIN["/sign-in<br/>Clerk SignIn"]
+    ROOT --> SIGNUP["/sign-up<br/>Clerk SignUp"]
+    ROOT --> DL["/dashboard Layout<br/>Sidebar + Header"]
+
+    DL --> D1["/dashboard<br/>Stats + Quick Actions + Plan Summary"]
+    DL --> D2["/dashboard/profile<br/>6-step Form Wizard + OCR"]
+    DL --> D3["/dashboard/smart-plan<br/>AI Interview + Voice"]
+    DL --> D4["/dashboard/tax-chat<br/>Streaming Chat UI"]
+    DL --> D5["/dashboard/documents<br/>Upload + Grid/List"]
+    DL --> D6["/dashboard/strategies<br/>57-strategy Explorer"]
+    DL --> D7["/dashboard/savings<br/>Charts + Breakdown"]
+    DL --> D8["/dashboard/tax-review<br/>Red/Green Flag Audit"]
+    DL --> D9["/dashboard/settings<br/>Preferences + Integrations"]
+
+    D3 --> VOICE["VoiceInterview<br/>Waveform + Phase Controls"]
+    VOICE --> HOOK["useVoiceConversation<br/>STT + TTS + Interpret"]
+    D4 --> CHATHOOK["useChat<br/>SSE Streaming"]
+
+    style ROOT fill:#1a1a28,stroke:#ff6600,stroke-width:2px,color:#e4e1e9
+    style DL fill:#1a1a28,stroke:#4cd6fb,stroke-width:2px,color:#e4e1e9
+    </pre>
+    <div class="diagram-caption">Fig 7. Frontend page hierarchy and key component relationships</div>
+  </div>
+
+  <h3>State Management</h3>
+  <p>The app uses a deliberately simple state architecture — localStorage for persistent data (client profiles, saved plans, documents) and React hooks for transient UI state. No Redux, no Zustand, no global state library. This works because:</p>
+  <div class="card-grid">
+    <div class="card green">
+      <div class="card-title">Why localStorage?</div>
+      <div class="card-body">Tax planning is inherently session-based. A client fills out their profile, gets a plan, maybe comes back to refine it. localStorage gives instant persistence without Supabase round-trips during the intake flow. The plan is the unit of work — save it when it's ready, not on every keystroke.</div>
+    </div>
+    <div class="card cyan">
+      <div class="card-title">When Supabase?</div>
+      <div class="card-body">Supabase is wired up and ready but currently underutilized. The path forward: save finalized plans to Supabase (linked to Clerk user ID), store document metadata and OCR results, enable multi-device access, and power advisor dashboards.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 9. FEATURE INVENTORY ========== -->
+<section id="features">
+  <div class="section-label">09 / Feature Inventory</div>
+  <h2>What's Built, What's Partial, What's Missing</h2>
+
+  <h3>Fully Built & Functional</h3>
+  <ul class="feature-list">
+    <li class="done">AI Tax Chat with streaming responses, model failover, and 2025 tax law system prompt</li>
+    <li class="done">57 tax strategies with full metadata: eligibility, implementation steps, IRC refs, savings formulas, qualification questions</li>
+    <li class="done">Smart Plan Engine — 16 intent detection, coverage tracking, readiness gating, entity-specific conversation prompts</li>
+    <li class="done">Voice-guided interview — two-way TTS/STT, 14 qualification sections, silence detection, section transitions, gap-filling mode</li>
+    <li class="done">OCR pipeline — Azure Document Intelligence with 15 specialized tax form models and multi-page chunking</li>
+    <li class="done">Profile builder — 6-step wizard with OCR upload, profile completeness scoring (0–100%)</li>
+    <li class="done">Document classifier — 26 tax document types via GPT-4o with confidence scores</li>
+    <li class="done">Savings calculator — 2025 federal tax brackets, marginal/effective rate computation, per-strategy savings estimation</li>
+    <li class="done">5 entity types with entity-specific dashboards, strategy filtering, and conversation context</li>
+    <li class="done">Clerk authentication with middleware protecting all dashboard routes</li>
+    <li class="done">Strategy explorer with filtering by entity type, category, risk level</li>
+    <li class="done">Landing page with animated hero, feature grid, and embedded QuickBot</li>
+    <li class="done">Tax review page with red/green flag analysis</li>
+    <li class="done">PDF export of plans via jsPDF</li>
+    <li class="done">ElevenLabs conversational AI widget integration</li>
+  </ul>
+
+  <h3>Partially Built (Needs Completion)</h3>
+  <ul class="feature-list">
+    <li class="planned">Document upload endpoint — stub returning mock response; needs Supabase Storage integration</li>
+    <li class="planned">Supabase persistence — clients wired up but plans/profiles only saved to localStorage</li>
+    <li class="planned">Savings dashboard charts — page exists but charts use placeholder data, not live plan data</li>
+    <li class="planned">Tax review — red/green flags are static/mock, not dynamically generated from profile + plan</li>
+    <li class="planned">Chat conversation history — sidebar shows mock sessions, not persisted conversations</li>
+    <li class="planned">Settings page — notification toggles and integration placeholders, not functional</li>
+  </ul>
+
+  <h3>Not Yet Built (Opportunities)</h3>
+  <ul class="feature-list">
+    <li class="idea">Multi-year planning — compare strategies across 2024/2025/2026 projections</li>
+    <li class="idea">Advisor portal — separate dashboard for Anil and team to review client plans</li>
+    <li class="idea">Strategy interaction modeling — some strategies conflict or amplify each other</li>
+    <li class="idea">QuickBooks / Xero integration — pull real P&L data for precise savings calculations</li>
+    <li class="idea">Automated deadline tracking — IRS filing dates, estimated tax payments, election deadlines</li>
+    <li class="idea">Client comparison / benchmarking — "clients like you typically save $X"</li>
+    <li class="idea">White-label capability — other tax firms could use this platform</li>
+  </ul>
+</section>
+
+<!-- ========== 10. GAPS & OPPORTUNITIES ========== -->
+<section id="gaps">
+  <div class="section-label">10 / Gaps & Strategic Opportunities</div>
+  <h2>What Would Make This a 10x Product</h2>
+  <p>The foundation is strong. These are the moves that would take AgFinTax from "impressive demo" to "indispensable tool that tax advisors can't live without."</p>
+
+  <div class="card-grid">
+    <div class="card highlight">
+      <div class="card-title">1. Strategy Interaction Graph</div>
+      <div class="card-body">Right now strategies are evaluated independently. In reality, they interact: S-Corp election affects reasonable compensation which affects FICA savings which affects retirement plan contribution limits. Build a dependency graph so the plan reflects these cascading effects and prevents contradictions (e.g., don't recommend both S-Corp election AND hiring children under sole prop rules).</div>
+    </div>
+    <div class="card cyan">
+      <div class="card-title">2. OCR → Strategy Auto-Qualification</div>
+      <div class="card-body">When a client uploads a 1040, the OCR extracts AGI, deductions, credits used, schedules filed. That data should automatically answer qualification questions. If Schedule C shows $180K income and no retirement contributions, the system should pre-qualify Solo 401(k), SEP IRA, and S-Corp election without asking.</div>
+    </div>
+    <div class="card green">
+      <div class="card-title">3. Supabase-Backed Persistence + Multi-Device</div>
+      <div class="card-body">Move plans, profiles, and conversation history from localStorage to Supabase. This unlocks: resuming sessions across devices, advisor review workflows, plan versioning (before/after comparison), and analytics on which strategies are most recommended.</div>
+    </div>
+    <div class="card purple">
+      <div class="card-title">4. Advisor Dashboard (B2B Play)</div>
+      <div class="card-body">Build a separate view for Anil and his team to see all client plans, track implementation progress, assign action items, and get alerts when a client's situation changes. This turns AgFinTax from a client self-service tool into a full practice management layer.</div>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">5. Real-Time Savings Calculator with Sliders</div>
+      <div class="card-body">Instead of static estimates, let users drag sliders (income, contribution amounts, property values) and watch their tax savings update in real-time. Show the math: "If you contribute $23,500 to 401(k) at your 32% marginal rate, you save $7,520 in federal tax." Make the value tangible and interactive.</div>
+    </div>
+    <div class="card red">
+      <div class="card-title">6. Deadline & Election Tracker</div>
+      <div class="card-body">Tax planning is time-sensitive. S-Corp election (Form 2553) has a March 15 deadline. Estimated payments are quarterly. 1031 exchanges have 45-day and 180-day windows. Build a calendar that tracks every deadline tied to the client's plan, sends reminders, and shows what happens if they miss it.</div>
+    </div>
+  </div>
+
+  <h3>More Opportunities — Ranked by Impact</h3>
+  <table>
+    <tr><th>#</th><th>Opportunity</th><th>Impact</th><th>Effort</th><th>Why</th></tr>
+    <tr><td>7</td><td>Scenario comparison ("what if S-Corp vs. LLC?")</td><td><span class="badge red">High</span></td><td><span class="badge yellow">Medium</span></td><td>Every client asks this. Side-by-side with real numbers closes deals.</td></tr>
+    <tr><td>8</td><td>PDF plan export (branded, printable)</td><td><span class="badge orange">High</span></td><td><span class="badge green">Low</span></td><td>jsPDF is already in the project. Needs professional template.</td></tr>
+    <tr><td>9</td><td>QuickBooks / bank feed integration</td><td><span class="badge red">High</span></td><td><span class="badge red">High</span></td><td>Replaces estimates with real numbers. Transforms accuracy.</td></tr>
+    <tr><td>10</td><td>State tax engine (50 states)</td><td><span class="badge orange">High</span></td><td><span class="badge red">High</span></td><td>Currently federal-only. State planning is 30% of the value for high-income clients.</td></tr>
+    <tr><td>11</td><td>Email/SMS reminders for action items</td><td><span class="badge yellow">Medium</span></td><td><span class="badge green">Low</span></td><td>Plans are useless if clients don't act. Automated nudges drive implementation.</td></tr>
+    <tr><td>12</td><td>Client onboarding wizard (no login required for demo)</td><td><span class="badge yellow">Medium</span></td><td><span class="badge green">Low</span></td><td>Reduce friction. Let prospects see value before creating an account.</td></tr>
+    <tr><td>13</td><td>RAG over IRS publications & tax code</td><td><span class="badge yellow">Medium</span></td><td><span class="badge yellow">Medium</span></td><td>Ground AI responses in actual IRS guidance, not just training data.</td></tr>
+    <tr><td>14</td><td>Audit risk scoring per strategy</td><td><span class="badge yellow">Medium</span></td><td><span class="badge yellow">Medium</span></td><td>REPS is high audit risk. Cost seg is low. Clients want to know.</td></tr>
+    <tr><td>15</td><td>White-label for other tax firms</td><td><span class="badge red">High</span></td><td><span class="badge red">High</span></td><td>The ultimate scale play — license the engine to other firms.</td></tr>
+  </table>
+</section>
+
+<!-- ========== 11. ROADMAP ========== -->
+<section id="roadmap">
+  <div class="section-label">11 / Suggested Roadmap</div>
+  <h2>Phased Implementation Plan</h2>
+  <p>Based on the gap analysis, here's a phased roadmap that balances quick wins with high-impact features. Each phase builds on the previous one.</p>
+
+  <h3>Phase 1 — Production Readiness (2–3 weeks)</h3>
+  <p class="dim">Get the existing features production-solid before adding new ones.</p>
+  <div class="roadmap-item done">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Supabase persistence for plans & profiles</div>
+      <div class="roadmap-desc">Move from localStorage to Supabase. Link plans to Clerk user IDs. Enable plan versioning. This is the single most important infrastructure upgrade — everything else depends on it.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Document upload to Supabase Storage</div>
+      <div class="roadmap-desc">Replace the stub endpoint with real file storage. Store OCR results alongside document metadata. Enable multi-document accumulation per client.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Wire savings dashboard to live plan data</div>
+      <div class="roadmap-desc">Replace placeholder charts with Recharts visualizations driven by the actual saved plan. Show breakdown by category, entity comparison, and implementation timeline.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Dynamic tax review from profile + plan</div>
+      <div class="roadmap-desc">Generate red/green flags by comparing the client's uploaded returns against their recommended strategies. "You filed Schedule C but aren't taking the home office deduction — potential $3,200 savings."</div>
+    </div>
+  </div>
+
+  <h3>Phase 2 — Differentiation (4–6 weeks)</h3>
+  <p class="dim">Features that make AgFinTax clearly better than anything else on the market.</p>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">OCR → auto-qualification pipeline</div>
+      <div class="roadmap-desc">When a client uploads their 1040, automatically answer qualification questions based on extracted data. Skip the interview for things the return already tells us. "We see you have Schedule E rental income — we've pre-qualified you for Cost Segregation and REPS evaluation."</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Strategy interaction modeling</div>
+      <div class="roadmap-desc">Build a dependency graph between strategies. Flag conflicts, amplifiers, and prerequisites. Example: "Recommend S-Corp election BEFORE reasonable compensation analysis." Or "Cash Balance Pension works best when combined with 401(k) profit sharing."</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Interactive savings calculator with sliders</div>
+      <div class="roadmap-desc">Let users adjust income, contribution amounts, property values — and watch savings recalculate in real-time. Show the marginal rate math. Make the value visceral.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Scenario comparison engine</div>
+      <div class="roadmap-desc">"What if I elect S-Corp?" vs "Stay as LLC" — side-by-side with real numbers. Include: FICA savings, additional compliance costs, payroll overhead, net benefit. This is the #1 question every business owner asks.</div>
+    </div>
+  </div>
+
+  <h3>Phase 3 — Scale & Monetize (2–3 months)</h3>
+  <p class="dim">Turn AgFinTax into a platform, not just a tool.</p>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Advisor dashboard & practice management</div>
+      <div class="roadmap-desc">Separate portal for Anil and team: see all clients, review AI-generated plans, approve strategies, assign implementation tasks, track completion. Turn the AI into an associate that does the research — the advisor does the judgment.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Deadline & election calendar</div>
+      <div class="roadmap-desc">Auto-generate a calendar from the client's plan: S-Corp election deadline, estimated tax payment dates, 1031 identification window, retirement plan setup deadlines. Email/SMS reminders.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">RAG over IRS publications</div>
+      <div class="roadmap-desc">Embed IRS Pub 535, 946, 550, 590-A, 590-B and key revenue procedures. Ground the AI's responses in actual IRS guidance with citation links. Moves from "the AI says" to "per IRS Publication 535, Section 10..."</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">State tax engine</div>
+      <div class="roadmap-desc">Add state income tax calculations for all 50 states. Enable PTE election analysis (now available in 30+ states). State planning is where high-income clients see the biggest delta between a good advisor and a great one.</div>
+    </div>
+  </div>
+  <div class="roadmap-item">
+    <div class="roadmap-dot"></div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">White-label architecture</div>
+      <div class="roadmap-desc">Abstract the branding layer, make strategies configurable, add multi-tenant support. License the platform to other tax firms. This is the path from services business to SaaS business.</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <p>AG FinTax Planning AI — Architecture & Technical Document v1.0<br/>
+  March 2026 &middot; Built & Powered by <a href="https://loukriai.com">LoukriAI.com</a></p>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1a1a28',
+      primaryTextColor: '#e4e1e9',
+      primaryBorderColor: '#ff6600',
+      lineColor: '#4cd6fb',
+      secondaryColor: '#222234',
+      tertiaryColor: '#12121c',
+      fontFamily: 'Montserrat, sans-serif',
+      fontSize: '13px',
+      noteBkgColor: '#222234',
+      noteTextColor: '#e4e1e9',
+      noteBorderColor: '#ff6600',
+    },
+    flowchart: { curve: 'basis', padding: 15 },
+    stateDiagram: { padding: 15 },
+  });
+</script>
+
+</body>
+</html>
