@@ -55,6 +55,8 @@ export interface UseVoiceConversationReturn {
   interimTranscript: string;
   error: string | null;
   isMuted: boolean;
+  isGapFillingMode: boolean;
+  effectiveSections: QualificationSection[];
 
   // Actions
   startInterview: () => Promise<void>;
@@ -588,6 +590,8 @@ export function useVoiceConversation(
     interimTranscript,
     error,
     isMuted,
+    isGapFillingMode,
+    effectiveSections,
     startInterview,
     pauseInterview,
     resumeInterview,

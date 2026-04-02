@@ -25,6 +25,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
+import InlineTaxCalculator from "@/components/tax-calculator/inline-calculator";
 
 /* ── animation variants ── */
 const fadeInUp = {
@@ -110,7 +111,10 @@ export default function Home() {
 
             {/* Nav links */}
             <div className="hidden items-center gap-8 md:flex">
-              <a href="#features" className="text-sm font-medium text-orange-500 transition-colors hover:text-[#FFB596]">
+              <a href="#calculator" className="text-sm font-medium text-orange-500 transition-colors hover:text-[#FFB596]">
+                Tax Calculator
+              </a>
+              <a href="#features" className="text-sm font-medium text-slate-400 transition-colors hover:text-[#E4E1E9]">
                 Solutions
               </a>
               <a href="#platform" className="text-sm font-medium text-slate-400 transition-colors hover:text-[#E4E1E9]">
@@ -339,6 +343,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ───────────── TAX CALCULATOR ───────────── */}
+      <InlineTaxCalculator />
 
       {/* ───────────── FEATURES GRID ───────────── */}
       <section id="features" className="py-24 lg:py-32">

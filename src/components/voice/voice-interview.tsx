@@ -35,6 +35,8 @@ export default function VoiceInterview({ sections, onComplete, entityType, profi
     interimTranscript,
     error,
     isMuted,
+    isGapFillingMode,
+    effectiveSections,
     startInterview,
     pauseInterview,
     skipQuestion,
@@ -56,9 +58,11 @@ export default function VoiceInterview({ sections, onComplete, entityType, profi
     }
   }, [isComplete, interviewState, onComplete]);
 
-  // Detect gap-filling mode (single section named "gap_filling")
-  const isGapFilling = sections.length === 1 && sections[0]?.id === "gap_filling";
-  const totalQuestions = isGapFilling ? sections[0].questions.length : 0;
+  // Gap-filling mode uses the effective sections from the hook (computed from profile)
+  const isGapFilling = isGapFillingMode;
+  const totalQuestions = isGapFilling
+    ? effectiveSections.reduce((sum, s) => sum + s.questions.length, 0)
+    : 0;
   const answeredCount = Object.keys(interviewState.answers).length;
 
   return (
@@ -99,9 +103,9 @@ export default function VoiceInterview({ sections, onComplete, entityType, profi
         </div>
 
         {/* Section pills — only show in structured (non-gap-filling) mode */}
-        {!isGapFilling && sections.length > 0 && (
+        {!isGapFilling && effectiveSections.length > 0 && (
           <div className="flex gap-1.5 mt-3 overflow-x-auto scrollbar-none">
-            {sections.map((section, i) => {
+            {effectiveSections.map((section, i) => {
               const isActive = i === interviewState.currentSectionIndex;
               const isDone = interviewState.completedSections.includes(section.id);
               return (

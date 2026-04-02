@@ -12,6 +12,8 @@ import {
   Settings,
   Sparkles,
   Building2,
+  Newspaper,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getEntityType, getEntityInfo, type EntityType } from "@/lib/tax/plan-store";
@@ -21,6 +23,8 @@ const mainNavItems = [
   { label: "Smart Plan", icon: Sparkles, href: "/dashboard/smart-plan" },
   { label: "Strategies", icon: TrendingUp, href: "/dashboard/strategies" },
   { label: "Tax Chat", icon: Brain, href: "/dashboard/tax-chat" },
+  { label: "Blog", icon: Newspaper, href: "/dashboard/blog" },
+  { label: "Videos", icon: Video, href: "/dashboard/content" },
 ];
 
 const bottomNavItems = [

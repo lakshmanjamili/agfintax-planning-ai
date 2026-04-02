@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { getApplicableStrategies, getStrategiesByEntity, STRATEGY_CATEGORIES, type MasterStrategy, type StrategyCategory } from "@/lib/tax/smart-plan-strategies";
+import { getApplicableStrategies, getStrategiesByEntity, STRATEGY_CATEGORIES, MASTER_STRATEGIES, type MasterStrategy, type StrategyCategory } from "@/lib/tax/smart-plan-strategies";
 import { TAX_INTENTS, detectCoveredIntents, getUncoveredIntents, hasEnoughInfo, buildCoverageMap, buildConversationPrompt, buildVoiceAnalysisPrompt } from "@/lib/tax/smart-plan-engine";
 import { getInterviewSections } from "@/lib/tax/qualification-engine";
 import VoiceInterview from "@/components/voice/voice-interview";
-import { savePlan, type SavedPlan, type EntityType, type ClientProfile, type StrategySlot, ENTITY_TYPES, getEntityType, saveEntityType, getEntityInfo, getClientProfile, profileToSmartPlanInput, analyzeProfileForEntity } from "@/lib/tax/plan-store";
+import { savePlan, getPlan, type SavedPlan, type PlanHistoryEntry, type EntityType, type ClientProfile, type StrategySlot, ENTITY_TYPES, getEntityType, saveEntityType, getEntityInfo, getClientProfile, profileToSmartPlanInput, analyzeProfileForEntity, getPlanHistory, getPlanCount, canCreatePlan, getRemainingPlans, loadPlanFromHistory, FREE_PLAN_LIMIT } from "@/lib/tax/plan-store";
+import { getVideosForStrategy } from "@/lib/content/video-data";
+import { getPostsForStrategy } from "@/lib/content/blog-data";
 import Link from "next/link";
 import {
   Brain,
@@ -52,6 +54,8 @@ import {
   TrendingDown,
   MapPin,
   ClipboardCheck,
+  Video,
+  Newspaper,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -468,11 +472,16 @@ export default function SmartPlanPage() {
   const [sliderValues, setSliderValues] = useState<Record<number, number>>({});
   const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
 
+  // Plan history & limits
+  const [planHistory, setPlanHistory] = useState<PlanHistoryEntry[]>([]);
+  const [showPlanHistory, setShowPlanHistory] = useState(false);
+
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [recordingDuration, setRecordingDuration] = useState(0);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -587,6 +596,38 @@ export default function SmartPlanPage() {
     const saved = getEntityType();
     if (saved) {
       setSelectedEntity(saved);
+    }
+
+    // Load plan history
+    setPlanHistory(getPlanHistory());
+
+    // Check for a previously saved plan — restore it directly
+    const existingPlan = getPlan();
+    if (existingPlan) {
+      setResult({
+        strategies: existingPlan.strategies.map((s) => {
+          // Use saved steps, or fall back to MASTER_STRATEGIES
+          const steps = s.implementationSteps?.length
+            ? s.implementationSteps
+            : (MASTER_STRATEGIES.find((ms) => ms.title === s.title)?.implementationSteps ?? []);
+          return {
+            title: s.title,
+            category: s.category,
+            description: s.description,
+            estimatedSavings: s.estimatedSavings,
+            savingsMin: s.savingsMin,
+            savingsMax: s.savingsMax,
+            implementationSteps: steps,
+          };
+        }),
+        totalEstimatedSavings: existingPlan.totalSavings,
+        profile: existingPlan.profile,
+      });
+      if (existingPlan.entityType) {
+        setSelectedEntity(existingPlan.entityType);
+      }
+      setPhase("results");
+    } else if (saved) {
       setPhase("welcome");
     }
 
@@ -600,12 +641,13 @@ export default function SmartPlanPage() {
         setProfileSummary(buildProfileText(cp));
       }
       // Compute analysis for entity
-      if (saved) {
-        const analysis = analyzeProfileForEntity(cp, saved);
+      const entityForAnalysis = existingPlan?.entityType || saved;
+      if (entityForAnalysis) {
+        const analysis = analyzeProfileForEntity(cp, entityForAnalysis);
         setProfileAnalysis(analysis);
         // Fetch LLM summary if profile has meaningful data
         if (hasAnyData) {
-          fetchLlmSummary(cp, saved);
+          fetchLlmSummary(cp, entityForAnalysis);
         }
       }
     }
@@ -901,6 +943,15 @@ export default function SmartPlanPage() {
    * Trigger plan generation from accumulated text + client profile
    */
   const triggerPlanGeneration = (fullText: string) => {
+    // Enforce free-tier plan limit
+    if (!canCreatePlan()) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: `You've reached your free plan limit (${FREE_PLAN_LIMIT} plans). Upgrade to Pro for unlimited plans and advanced strategies.` },
+      ]);
+      return;
+    }
+
     setPhase("loading");
     setMessages((prev) => [...prev, { role: "bot", text: "Building your personalized tax plan..." }]);
 
@@ -934,14 +985,19 @@ export default function SmartPlanPage() {
     submitPlan(answers);
   };
 
-  // Auto-scroll chat — only when new messages are added, not on every text update
+  // Auto-scroll chat — flex-col-reverse handles most cases automatically,
+  // but we nudge scroll to 0 (which is "bottom" in reverse layout) on new messages
   const messageCountRef = useRef(0);
   useEffect(() => {
     if (messages.length !== messageCountRef.current) {
       messageCountRef.current = messages.length;
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = 0;
+        }
+      });
     }
-  }, [messages.length, phase]);
+  }, [messages.length, phase, isAiThinking]);
 
   /* ---- AI-driven conversation send ---- */
 
@@ -1161,11 +1217,15 @@ export default function SmartPlanPage() {
           estimatedSavings: s.estimatedSavings,
           savingsMin: s.savingsMin,
           savingsMax: s.savingsMax,
+          implementationSteps: s.implementationSteps,
         })),
         totalSavings: planResult.totalEstimatedSavings,
         createdAt: new Date().toISOString(),
         coveredIntents: coveredIntents,
       });
+
+      // Refresh plan history
+      setPlanHistory(getPlanHistory());
 
       const sv: Record<number, number> = {};
       (data.strategies as Strategy[]).forEach((s: Strategy, i: number) => {
@@ -1549,7 +1609,7 @@ ${strategyPages}
         )}
 
         {/* ---- Main Content Area ---- */}
-        <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         {/* ---- Progress Bar (inline, no redundant tabs) ---- */}
         {phase === "voice" && (
           <div className="sticky top-0 z-30 bg-[#131318]/80 backdrop-blur-md border-b border-white/5">
@@ -1958,31 +2018,35 @@ ${strategyPages}
 
         {/* ---- Structured Voice Interview Mode (Two-Way: TTS + Whisper) ---- */}
         {phase === "voice-interview" && (
-          <div className="max-w-2xl mx-auto px-4 pt-6 pb-8 animate-fade-in-up">
-            <div className="relative rounded-2xl bg-[rgba(31,31,37,0.6)] border border-white/5 overflow-hidden" style={{ minHeight: "70vh" }}>
-              <VoiceInterview
-                sections={interviewSections}
-                onComplete={handleVoiceInterviewComplete}
-                entityType={selectedEntity || undefined}
-                profile={clientProfile ? {
-                  occupation: clientProfile.occupation || undefined,
-                  entityType: clientProfile.entityType || undefined,
-                  filingStatus: clientProfile.filingStatus || undefined,
-                  annualIncome: clientProfile.annualIncome || undefined,
-                  dependents: clientProfile.dependents,
-                  state: clientProfile.state || undefined,
-                  hasRealEstate: clientProfile.hasRealEstate,
-                  hasBusinessIncome: clientProfile.hasBusinessIncome,
-                } : undefined}
-              />
-            </div>
-            <div className="text-center mt-4">
-              <button
-                onClick={() => { setPhase("welcome"); }}
-                className="text-xs text-[#C7C5D3] hover:text-[#FFB596] transition"
-              >
-                ← Back to options
-              </button>
+          <div className="flex flex-col h-[calc(100vh-5rem)]">
+            <div className="flex-1 flex items-start justify-center overflow-y-auto px-4 pt-6 pb-8">
+              <div className="w-full max-w-2xl animate-fade-in-up">
+                <div className="relative rounded-2xl bg-[rgba(31,31,37,0.6)] border border-white/5 overflow-hidden" style={{ minHeight: "min(70vh, 600px)" }}>
+                  <VoiceInterview
+                    sections={interviewSections}
+                    onComplete={handleVoiceInterviewComplete}
+                    entityType={selectedEntity || undefined}
+                    profile={clientProfile ? {
+                      occupation: clientProfile.occupation || undefined,
+                      entityType: clientProfile.entityType || undefined,
+                      filingStatus: clientProfile.filingStatus || undefined,
+                      annualIncome: clientProfile.annualIncome || undefined,
+                      dependents: clientProfile.dependents,
+                      state: clientProfile.state || undefined,
+                      hasRealEstate: clientProfile.hasRealEstate,
+                      hasBusinessIncome: clientProfile.hasBusinessIncome,
+                    } : undefined}
+                  />
+                </div>
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => { setPhase("welcome"); }}
+                    className="text-xs text-[#C7C5D3] hover:text-[#FFB596] transition"
+                  >
+                    ← Back to options
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -2241,8 +2305,8 @@ ${strategyPages}
               </div>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto max-w-2xl w-full mx-auto px-4 pt-6 pb-6">
-
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto flex flex-col-reverse max-w-2xl w-full mx-auto px-4 pt-6 pb-6">
+           <div>
             {/* Profile context banner (compact) */}
             {hasProfile && clientProfile && (
               <div className="mb-4 rounded-xl bg-[rgba(31,31,37,0.4)] border border-white/5 px-4 py-2.5 flex items-center gap-2.5">
@@ -2250,7 +2314,7 @@ ${strategyPages}
                 <p className="text-[11px] text-[#C7C5D3] truncate">
                   <span className="text-green-400 font-medium">Profile loaded</span>
                   {clientProfile.occupation && <> &middot; {clientProfile.occupation}</>}
-                  {clientProfile.annualIncome && <> &middot; ${Number(clientProfile.annualIncome).toLocaleString() || clientProfile.annualIncome}</>}
+                  {clientProfile.annualIncome && !isNaN(Number(clientProfile.annualIncome)) && Number(clientProfile.annualIncome) > 0 && <> &middot; ${Number(clientProfile.annualIncome).toLocaleString()}</>}
                   {clientProfile.state && <> &middot; {clientProfile.state}</>}
                 </p>
               </div>
@@ -2263,7 +2327,7 @@ ${strategyPages}
                   key={i}
                   className={`flex ${
                     msg.role === "user" ? "justify-end" : "justify-start"
-                  } animate-fade-in-up`}
+                  }`}
                 >
                   {msg.role === "bot" && (
                     <div className="flex-shrink-0 mr-3 mt-1">
@@ -2359,6 +2423,7 @@ ${strategyPages}
               </div>
             )}
 
+           </div>
           </div>
 
             {/* Input bar — anchored to bottom of flex column */}
@@ -2415,29 +2480,117 @@ ${strategyPages}
         {/* ---- Phase 2: Strategy Results ---- */}
         {phase === "results" && result && (
           <div className="flex flex-col h-[calc(100vh-5rem)]">
-          {/* Header bar */}
-          <div className="shrink-0 z-30 bg-[#131318]/80 backdrop-blur-md border-b border-white/5">
-            <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#FFB596]" />
-                <span className="text-sm font-semibold text-[#E4E1E9]">Your Tax Plan</span>
-                {selectedEntity && (() => {
-                  const eInfo = getEntityInfo(selectedEntity);
-                  return (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ml-1" style={{ backgroundColor: `${eInfo.color}15`, color: eInfo.color }}>
-                      {eInfo.label} ({eInfo.formNumber})
-                    </span>
-                  );
-                })()}
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-[#C7C5D3]">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                {result.strategies.length} Strategies Ready
+            {/* Header bar */}
+            <div className="shrink-0 z-30 bg-[#131318]/80 backdrop-blur-md border-b border-white/5">
+              <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#FFB596]" />
+                  <span className="text-sm font-semibold text-[#E4E1E9]">Your Tax Plan</span>
+                  {selectedEntity && (() => {
+                    const eInfo = getEntityInfo(selectedEntity);
+                    return (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ml-1" style={{ backgroundColor: `${eInfo.color}15`, color: eInfo.color }}>
+                        {eInfo.label} ({eInfo.formNumber})
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-[11px] text-[#C7C5D3]">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    {result.strategies.length} Strategies Ready
+                  </div>
+                  {planHistory.length > 1 && (
+                    <button
+                      onClick={() => setShowPlanHistory(!showPlanHistory)}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-medium text-[#C7C5D3] hover:text-white transition flex items-center gap-1"
+                    >
+                      <Clock className="w-3 h-3" />
+                      {planHistory.length} Plans
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (!canCreatePlan()) {
+                        alert(`You've used all ${FREE_PLAN_LIMIT} free plans. Upgrade to Pro for unlimited plans.`);
+                        return;
+                      }
+                      setResult(null);
+                      setSliderValues({});
+                      setExpandedCards({});
+                      setMessages([]);
+                      setCoveredIntents([]);
+                      setAllUserText("");
+                      setPhase(selectedEntity ? "welcome" : "entity-select");
+                    }}
+                    className="px-3 py-1 rounded-lg bg-[#DC5700]/20 hover:bg-[#DC5700]/30 text-[10px] font-semibold text-[#FFB596] transition flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    New Plan ({getRemainingPlans()} left)
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-4 pt-6 pb-6 animate-fade-in-up">
+
+            {/* Plan history dropdown */}
+            {showPlanHistory && planHistory.length > 1 && (
+              <div className="shrink-0 bg-[#1B1B20] border-b border-white/5 px-4 py-3">
+                <div className="max-w-5xl mx-auto">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-[#C7C5D3]">Your Saved Plans ({planHistory.length}/{FREE_PLAN_LIMIT} free)</p>
+                    <button onClick={() => setShowPlanHistory(false)} className="p-1 hover:bg-white/5 rounded-lg transition">
+                      <X className="w-3.5 h-3.5 text-[#C7C5D3]" />
+                    </button>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                    {[...planHistory].reverse().map((plan) => {
+                      const isCurrent = plan.createdAt === (getPlan()?.createdAt ?? "");
+                      return (
+                        <button
+                          key={plan.id}
+                          onClick={() => {
+                            loadPlanFromHistory(plan.id);
+                            const loaded = getPlan();
+                            if (loaded) {
+                              setResult({
+                                strategies: loaded.strategies.map((s) => {
+                                  const steps = s.implementationSteps?.length
+                                    ? s.implementationSteps
+                                    : (MASTER_STRATEGIES.find((ms) => ms.title === s.title)?.implementationSteps ?? []);
+                                  return { ...s, implementationSteps: steps };
+                                }),
+                                totalEstimatedSavings: loaded.totalSavings,
+                                profile: loaded.profile,
+                              });
+                              if (loaded.entityType) setSelectedEntity(loaded.entityType);
+                              setSliderValues({});
+                              setExpandedCards({});
+                            }
+                            setShowPlanHistory(false);
+                          }}
+                          className={`shrink-0 px-3 py-2 rounded-xl border text-left transition-all ${
+                            isCurrent
+                              ? "bg-[#DC5700]/15 border-[#DC5700]/30 text-[#FFB596]"
+                              : "bg-white/5 border-white/5 text-[#C7C5D3] hover:border-white/10"
+                          }`}
+                        >
+                          <p className="text-xs font-semibold whitespace-nowrap">{plan.label ?? "Plan"}</p>
+                          <p className="text-[10px] opacity-60 mt-0.5">
+                            {new Date(plan.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            {" · "}
+                            {plan.strategies.length} strategies
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-5xl mx-auto px-4 pt-6 pb-6 animate-fade-in-up">
             {/* Header Card */}
             <div className="rounded-2xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/5 p-6 mb-6">
               <div className="flex items-center gap-2 mb-4">
@@ -2554,6 +2707,11 @@ ${strategyPages}
                 const expanded = expandedCards[idx] ?? false;
                 const sliderVal = sliderValues[idx] ?? strategy.estimatedSavings;
 
+                // Find matching master strategy to link content
+                const masterMatch = MASTER_STRATEGIES.find((ms) => ms.title === strategy.title);
+                const strategyVideos = masterMatch ? getVideosForStrategy(masterMatch.id) : [];
+                const strategyPosts = masterMatch ? getPostsForStrategy(masterMatch.id) : [];
+
                 return (
                   <div
                     key={idx}
@@ -2627,6 +2785,24 @@ ${strategyPages}
                         <BookOpen className="w-3.5 h-3.5" />
                         Learn More — AI Deep Dive
                       </button>
+                      {strategyVideos.length > 0 && (
+                        <Link
+                          href={`/dashboard/content?strategy=${masterMatch?.id}`}
+                          className="flex items-center gap-1.5 text-xs text-[#A78BFA] hover:text-[#A78BFA]/80 transition font-medium"
+                        >
+                          <Video className="w-3.5 h-3.5" />
+                          Watch Video
+                        </Link>
+                      )}
+                      {strategyPosts.length > 0 && (
+                        <Link
+                          href={`/dashboard/blog?strategy=${masterMatch?.id}`}
+                          className="flex items-center gap-1.5 text-xs text-[#34D399] hover:text-[#34D399]/80 transition font-medium"
+                        >
+                          <Newspaper className="w-3.5 h-3.5" />
+                          Read Article
+                        </Link>
+                      )}
                     </div>
 
                     {expanded && (
@@ -2641,16 +2817,36 @@ ${strategyPages}
                   </div>
                 );
               })}
-            </div>
+              </div>
 
-          </div>
-          </div>
+              {/* ---- What-If Scenario Engine CTA ---- */}
+              <Link href="/dashboard/scenarios" className="block mt-8 mb-6 group">
+                <div className="rounded-2xl bg-gradient-to-r from-[#DC5700]/10 to-[#4CD6FB]/5 border border-[#DC5700]/20 p-6 hover:border-[#DC5700]/40 transition-all hover:shadow-lg hover:shadow-[#DC5700]/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DC5700] to-[#FFB596] flex items-center justify-center shrink-0">
+                      <Zap className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-extrabold text-[#E4E1E9] group-hover:text-[#FFB596] transition">What-If Scenario Engine</h3>
+                      <p className="text-[11px] text-[#C7C5D3] mt-0.5">
+                        See the exact dollar impact — LLC vs S-Corp, Roth Conversions, 1031 Exchanges, Retirement Plans & more. Auto-generated from your profile with real numbers, bar charts, and 5-year projections.
+                      </p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-1.5 text-xs font-bold text-[#DC5700] group-hover:text-[#FFB596] transition">
+                      View Scenarios <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              </div>
+            </div>
 
             {/* Bottom bar — anchored to bottom of flex column */}
             <div className="shrink-0 border-t border-white/5 bg-[#131318] px-4 py-4">
               <div className="max-w-5xl mx-auto">
-                <div className="rounded-2xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/5 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 shrink-0">
                     <TrendingUp className="w-5 h-5 text-[#FFB596]" />
                     <div>
                       <p className="text-xs text-[#C7C5D3]">
@@ -2661,39 +2857,53 @@ ${strategyPages}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     <button
                       onClick={generateReport}
                       disabled={isGeneratingReport}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#FFB596]/30 transition disabled:opacity-50"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#FFB596]/30 transition disabled:opacity-50"
                     >
                       {isGeneratingReport ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Download className="w-4 h-4" />
                       )}
-                      {isGeneratingReport ? "Generating..." : "Generate Report"}
+                      {isGeneratingReport ? "Generating..." : "Report"}
                     </button>
                     <Link
                       href="/dashboard/strategies"
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#FFB596]/30 transition"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#FFB596]/30 transition"
                     >
                       <TrendingUp className="w-4 h-4" />
-                      View All Strategies
+                      Strategies
                     </Link>
                     <Link
                       href="/dashboard"
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#FFB596]/30 transition"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#FFB596]/30 transition"
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       Dashboard
                     </Link>
+                    <Link
+                      href="/dashboard/content"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/10 text-sm font-medium text-[#E4E1E9] hover:border-[#A78BFA]/30 transition"
+                    >
+                      <Video className="w-4 h-4" />
+                      Videos
+                    </Link>
+                    <Link
+                      href="/dashboard/scenarios"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-[#DC5700]/20 text-sm font-medium text-[#FFB596] hover:border-[#DC5700]/40 transition"
+                    >
+                      <Zap className="w-4 h-4" />
+                      What-If
+                    </Link>
                     <a
                       href="tel:+14253954318"
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#DC5700] hover:bg-[#DC5700]/80 text-sm font-semibold text-white transition"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#DC5700] hover:bg-[#DC5700]/80 text-sm font-semibold text-white transition"
                     >
                       <Phone className="w-4 h-4" />
-                      Discuss with Tax Architect
+                      Discuss with Advisor
                     </a>
                   </div>
                 </div>

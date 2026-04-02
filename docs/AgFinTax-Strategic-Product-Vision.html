@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgFinTax — What to Build Next (And Why)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #03045e;
+    --orange: #ff6600;
+    --dark: #0a0a14;
+    --surface: #12121c;
+    --surface2: #1a1a28;
+    --text: #e4e1e9;
+    --dim: #908f9c;
+    --cyan: #4cd6fb;
+    --green: #10b981;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --yellow: #f59e0b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: var(--text); line-height: 1.75; -webkit-font-smoothing: antialiased; }
+
+  .cover {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; padding: 3rem 2rem;
+    background: linear-gradient(170deg, #0a0a14 0%, #0d0520 40%, #1a0800 100%);
+    position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(255,102,0,0.06) 0%, transparent 70%);
+    top: 30%; right: 20%; border-radius: 50%;
+  }
+  .cover .tag { color: var(--orange); font-size: 0.75rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 1.5rem; }
+  .cover h1 { font-size: 3rem; font-weight: 900; line-height: 1.15; margin-bottom: 1rem; max-width: 800px; }
+  .cover h1 span { background: linear-gradient(135deg, var(--orange), #ffb088); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .cover .sub { font-size: 1.05rem; color: var(--dim); max-width: 620px; margin-bottom: 2rem; }
+  .cover .warning {
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px;
+    padding: 1rem 1.5rem; max-width: 600px; font-size: 0.85rem; color: #fca5a5;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+  section { padding: 4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .label { font-size: 0.65rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; }
+  h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.75rem; line-height: 1.25; }
+  h3 { font-size: 1.2rem; font-weight: 700; margin: 2.5rem 0 0.6rem; color: var(--cyan); }
+  h4 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.4rem; }
+  p { margin-bottom: 1rem; font-size: 0.9rem; }
+  p.dim { color: var(--dim); }
+  p.callout {
+    background: var(--surface); border-left: 3px solid var(--orange); border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem; font-size: 0.88rem; margin: 1.5rem 0;
+  }
+  p.insight {
+    background: rgba(76,214,251,0.05); border-left: 3px solid var(--cyan); border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem; font-size: 0.88rem; margin: 1.5rem 0;
+  }
+  p.danger {
+    background: rgba(239,68,68,0.05); border-left: 3px solid var(--red); border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem; font-size: 0.88rem; margin: 1.5rem 0; color: #fca5a5;
+  }
+
+  .comp-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.82rem; }
+  .comp-table th { text-align: left; padding: 0.6rem 0.8rem; background: var(--surface2); color: var(--orange); font-weight: 600; border-bottom: 2px solid rgba(255,102,0,0.15); }
+  .comp-table td { padding: 0.55rem 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+  .comp-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .check { color: var(--green); } .cross { color: var(--red); } .partial { color: var(--yellow); }
+
+  .feature-block {
+    background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;
+    padding: 1.5rem; margin: 1.5rem 0;
+  }
+  .feature-block.priority-1 { border-left: 4px solid var(--red); }
+  .feature-block.priority-2 { border-left: 4px solid var(--orange); }
+  .feature-block.priority-3 { border-left: 4px solid var(--yellow); }
+  .feature-block.priority-4 { border-left: 4px solid var(--cyan); }
+  .feature-block .fb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+  .feature-block .fb-title { font-size: 1.05rem; font-weight: 700; }
+  .feature-block .fb-badge {
+    font-size: 0.6rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .fb-badge.p1 { background: rgba(239,68,68,0.15); color: var(--red); }
+  .fb-badge.p2 { background: rgba(255,102,0,0.15); color: var(--orange); }
+  .fb-badge.p3 { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .fb-badge.p4 { background: rgba(76,214,251,0.12); color: var(--cyan); }
+  .feature-block .fb-body { font-size: 0.85rem; color: var(--dim); line-height: 1.7; }
+  .feature-block .fb-body strong { color: var(--text); }
+  .feature-block .fb-why { margin-top: 0.75rem; font-size: 0.82rem; color: var(--green); font-weight: 500; }
+  .feature-block .fb-meta {
+    display: flex; gap: 1.5rem; margin-top: 0.75rem; font-size: 0.72rem; color: var(--dim);
+    border-top: 1px solid rgba(255,255,255,0.04); padding-top: 0.6rem;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .grid-2 .g-card {
+    background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .g-card .g-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .g-card .g-body { font-size: 0.8rem; color: var(--dim); line-height: 1.6; }
+
+  .number-big { font-size: 3rem; font-weight: 900; color: var(--orange); line-height: 1; }
+  .number-label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.2rem; }
+
+  .footer { text-align: center; padding: 3rem 2rem; font-size: 0.75rem; color: var(--dim); }
+  .footer a { color: var(--orange); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .cover h1 { font-size: 2rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="cover">
+  <div class="tag">Strategic Product Vision</div>
+  <h1>What <span>AgFinTax</span> Needs to Build Next</h1>
+  <p class="sub">An honest assessment of where we are, what the market looks like, what the competitors do that we don't, and the specific features that will protect the $1M revenue and grow it to $5M.</p>
+  <div class="warning">This is not a generic feature wishlist. Every recommendation below is grounded in competitive analysis, client psychology, and what actually makes tax planning clients stay and pay.</div>
+</div>
+
+<div class="container">
+
+<!-- ===== THE REAL PROBLEM ===== -->
+<section>
+  <div class="label">The Hard Truth</div>
+  <h2>Why "Upload Docs + Chat with AI" Will Not Win</h2>
+
+  <p>Here's the uncomfortable reality: right now, almost every AI tax tool on the market does the same thing. Upload a return, get strategy suggestions, see a savings number. Instead.com does it for $16/month. TaxPlanIQ does it with bulk upload of 100 returns at once. Corvée has 1,500 strategies and charges firms $150-$1,500/month.</p>
+
+  <p>If AgFinTax competes on "we have AI that reads your documents and suggests strategies," it's competing on a feature that's becoming commoditized. The AI part — the chatbot, the strategy suggestions, the savings estimates — that's table stakes now. Every serious player has it or will have it within 6 months.</p>
+
+  <p class="danger"><strong>The risk:</strong> A client tries AgFinTax, gets a plan with 12 strategies and $47K in estimated savings. Then they try Instead.com for $16/month and get something similar. Why are they paying Anil's firm premium fees? The AI alone doesn't justify it.</p>
+
+  <p>So the question isn't "what AI features should we add." The question is: <strong>what can AgFinTax do that makes the AI inseparable from Anil's firm, Anil's expertise, and the ongoing relationship that justifies premium pricing?</strong></p>
+
+  <p class="callout">The winning strategy is not a better chatbot. It's a <strong>system that makes the human advisor 10x more valuable</strong> — and makes the client feel like they have a tax team watching their money 365 days a year.</p>
+</section>
+
+<!-- ===== COMPETITIVE LANDSCAPE ===== -->
+<section>
+  <div class="label">Competitive Analysis</div>
+  <h2>What Every Competitor Does (and Doesn't Do)</h2>
+
+  <table class="comp-table">
+    <tr>
+      <th>Feature</th>
+      <th>AgFinTax (Current)</th>
+      <th>Instead.com</th>
+      <th>Corvée</th>
+      <th>TaxPlanIQ</th>
+      <th>Tax Maverick</th>
+    </tr>
+    <tr>
+      <td>AI strategy suggestions</td>
+      <td><span class="check">&#10003;</span> 57 strategies</td>
+      <td><span class="check">&#10003;</span> 18+ strategies</td>
+      <td><span class="check">&#10003;</span> 1,500 strategies</td>
+      <td><span class="check">&#10003;</span> 80+ strategies</td>
+      <td><span class="check">&#10003;</span> 30+ strategies</td>
+    </tr>
+    <tr>
+      <td>Document OCR / upload</td>
+      <td><span class="check">&#10003;</span> Azure 15 models</td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span> Bulk 100 returns</td>
+      <td><span class="check">&#10003;</span></td>
+    </tr>
+    <tr>
+      <td>Voice-guided intake</td>
+      <td><span class="check">&#10003;</span> Two-way TTS/STT</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>Entity-specific planning</td>
+      <td><span class="check">&#10003;</span> 5 entity types</td>
+      <td><span class="partial">&#9679;</span> Basic</td>
+      <td><span class="check">&#10003;</span> Multi-entity</td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span></td>
+    </tr>
+    <tr>
+      <td>Qualification interview</td>
+      <td><span class="check">&#10003;</span> 14 sections</td>
+      <td><span class="check">&#10003;</span> Questionnaire</td>
+      <td><span class="check">&#10003;</span> Guided Q's</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span> Structured</td>
+    </tr>
+    <tr>
+      <td>Auto-generate documents</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span> + e-sign</td>
+      <td><span class="partial">&#9679;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>QuickBooks integration</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>Client-facing branded reports</td>
+      <td><span class="partial">&#9679;</span> Basic PDF</td>
+      <td><span class="check">&#10003;</span> Polished</td>
+      <td><span class="check">&#10003;</span> Polished</td>
+      <td><span class="check">&#10003;</span> ROI report</td>
+      <td><span class="check">&#10003;</span> Proposal deck</td>
+    </tr>
+    <tr>
+      <td>Multi-year projections</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span> 10-year ROI</td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>Scenario comparison (A vs B)</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="partial">&#9679;</span></td>
+    </tr>
+    <tr>
+      <td>Advisor dashboard / CRM</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span> Pro tier</td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span> Client portal</td>
+      <td><span class="partial">&#9679;</span></td>
+    </tr>
+    <tr>
+      <td>Implementation tracking</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="partial">&#9679;</span> Action list</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span> Action items</td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>Bulk client processing</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span> 100 at once</td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>Client self-service portal</td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="cross">&#10007;</span> Advisor-only</td>
+      <td><span class="check">&#10003;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td>Marketing tools for firm</td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="cross">&#10007;</span></td>
+      <td><span class="check">&#10003;</span> 100+ email campaigns</td>
+      <td><span class="cross">&#10007;</span></td>
+    </tr>
+    <tr>
+      <td><strong>Price</strong></td>
+      <td><strong>Premium (firm)</strong></td>
+      <td><strong>$16/mo</strong></td>
+      <td><strong>$150-1500/mo</strong></td>
+      <td><strong>Subscription</strong></td>
+      <td><strong>Subscription</strong></td>
+    </tr>
+  </table>
+
+  <h3>Where AgFinTax Currently Wins</h3>
+  <p>Voice-guided intake is a genuine differentiator — nobody else has it. The structured qualification engine with disqualification logic is more sophisticated than Instead's simple questionnaire. And having a dedicated platform for one firm means the brand experience is seamless — it's not "powered by Corvée," it IS AG FinTax.</p>
+
+  <h3>Where AgFinTax Currently Loses</h3>
+  <p>No document auto-generation or e-signatures. No QuickBooks integration for real numbers. No multi-year projections. No advisor dashboard. No implementation tracking. No polished client-facing reports. No scenario comparison. These aren't nice-to-haves — these are the features that make clients feel like they're getting a <em>service</em>, not a chatbot.</p>
+</section>
+
+<!-- ===== THE FRAMEWORK ===== -->
+<section>
+  <div class="label">The Framework</div>
+  <h2>The Three Layers That Make Clients Stay</h2>
+
+  <p>Forget features for a moment. Think about why a client paying premium fees to Anil's firm would stay versus churning to a $16/month self-service tool. There are three layers:</p>
+
+  <div class="grid-2">
+    <div class="g-card" style="border-top: 3px solid var(--red);">
+      <div class="g-title">Layer 1: Instant Value</div>
+      <div class="g-body">The first 5 minutes must show the client real money on the table. Not "we'll analyze your situation." Real numbers. "$47,200 in potential savings identified." If a client has to fill out 30 fields before seeing any value, they'll bounce. The hook must be immediate.</div>
+    </div>
+    <div class="g-card" style="border-top: 3px solid var(--orange);">
+      <div class="g-title">Layer 2: Ongoing Relationship</div>
+      <div class="g-body">Tax planning isn't a one-time event. The platform must create reasons for the client to come back monthly — new strategies unlocked, deadline reminders, tax law changes that affect them, quarterly check-ins, progress on implementation. The value compounds over time.</div>
+    </div>
+    <div class="g-card" style="border-top: 3px solid var(--green);">
+      <div class="g-title">Layer 3: The Advisor Multiplier</div>
+      <div class="g-body">The AI does the research. Anil does the judgment. The platform must make Anil look like a genius — pre-generating plans he reviews and approves, flagging risks he catches, tracking implementation he oversees. The client sees the AI AND the human. That's worth premium pricing.</div>
+    </div>
+    <div class="g-card" style="border-top: 3px solid var(--purple);">
+      <div class="g-title">Layer 4: Lock-In Through Data</div>
+      <div class="g-body">Once a client has 3 years of returns uploaded, a full profile, implementation history, and year-over-year savings tracked — they can't leave. The switching cost is too high. Their entire tax history lives in AgFinTax. Build the vault.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== THE FEATURES ===== -->
+<section>
+  <div class="label">What to Build</div>
+  <h2>The 10 Features That Actually Matter</h2>
+  <p class="dim">Ranked by revenue impact. Not by what's cool technically, but by what makes clients pay more, stay longer, and refer others.</p>
+
+  <!-- FEATURE 1 -->
+  <div class="feature-block priority-1">
+    <div class="fb-header">
+      <div class="fb-title">1. The "Money Finder" — Instant Value in 60 Seconds</div>
+      <span class="fb-badge p1">Revenue Critical</span>
+    </div>
+    <div class="fb-body">
+      <p>Right now, a prospect has to sign up, choose an entity type, fill out a profile, maybe upload a document — all before seeing a single dollar of savings. That's a funnel killer.</p>
+      <p><strong>Build this:</strong> A no-login "Money Finder" on the landing page. Three questions: entity type, approximate income, state. That's it. In 10 seconds, the system runs the savings calculator and shows: "Based on your profile, business owners like you typically leave $28,000–$67,000 on the table. Here are your top 3 opportunities." Show the strategies. Show the savings. Show the IRC sections. Then the CTA: "Want the full plan? Create your free account."</p>
+      <p>This is what Instead does with their $16/month hook. This is what Tax Maverick does with their structured intake. But none of them do it <strong>without requiring a login first</strong>. If AgFinTax can show value before asking for anything, it wins the first 60 seconds.</p>
+    </div>
+    <div class="fb-why">Revenue impact: This is the difference between a 2% and 15% visitor-to-signup conversion rate.</div>
+    <div class="fb-meta">
+      <span>Effort: 1–2 weeks</span>
+      <span>Dependencies: Savings calculator (exists), strategy library (exists)</span>
+      <span>Risk: None — uses existing engine</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 2 -->
+  <div class="feature-block priority-1">
+    <div class="fb-header">
+      <div class="fb-title">2. Client-Ready Tax Plan Report (Branded PDF)</div>
+      <span class="fb-badge p1">Revenue Critical</span>
+    </div>
+    <div class="fb-body">
+      <p>This is the single biggest gap versus competitors. Corvée generates polished reports. TaxPlanIQ generates 10-year ROI reports. Tax Maverick generates proposal decks with fees. Instead generates strategy reports with IRS citations.</p>
+      <p><strong>AgFinTax generates... a list on screen.</strong></p>
+      <p>Build a <strong>branded, professional PDF report</strong> that Anil can hand to a client — in person, via email, on a Zoom call. It should include: AG FinTax cover page, executive summary ("We identified $67,200 in potential annual tax savings across 8 strategies"), per-strategy pages (description, your estimated savings, implementation steps, timeline, who's responsible, IRC reference), a savings waterfall chart (current tax → optimized tax with each strategy stacked), and a clear "Next Steps" action plan with deadlines.</p>
+      <p>This is what the client takes home. This is what they show their spouse. This is what justifies the fee. <strong>The report IS the product.</strong> Everything else is infrastructure that produces the report.</p>
+    </div>
+    <div class="fb-why">Revenue impact: This is literally what Anil presents in client meetings to justify his advisory fees. Without it, the AI is invisible to the client.</div>
+    <div class="fb-meta">
+      <span>Effort: 2–3 weeks</span>
+      <span>Dependencies: Plan data (exists), jsPDF (exists), reportlab (used for strategy PDF)</span>
+      <span>Risk: Low — design challenge, not engineering</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 3 -->
+  <div class="feature-block priority-1">
+    <div class="fb-header">
+      <div class="fb-title">3. Advisor Dashboard — Anil's Command Center</div>
+      <span class="fb-badge p1">Revenue Critical</span>
+    </div>
+    <div class="fb-body">
+      <p>Right now, every client has their own silo. Anil can't see all his clients' plans in one place. He can't prioritize who to call this week. He can't see which strategies are pending implementation. He can't track revenue from advisory services.</p>
+      <p><strong>Build this:</strong> A separate <code>/advisor</code> dashboard (role-based access via Clerk) showing: all clients in a sortable table (name, entity type, total savings identified, strategies implemented, last activity), a pipeline view (intake → plan generated → strategies approved → implementing → complete), filters by entity type and savings range, and the ability to click into any client's plan to review, annotate, approve, or flag for follow-up.</p>
+      <p>This turns AgFinTax from a client self-service tool into Anil's practice management platform. He opens it every morning. He sees which clients need attention. The AI did the research — he does the relationship.</p>
+    </div>
+    <div class="fb-why">Revenue impact: This is what makes Anil's firm efficient enough to handle 200+ clients at premium fees instead of 50. It's the scalability layer.</div>
+    <div class="fb-meta">
+      <span>Effort: 3–4 weeks</span>
+      <span>Dependencies: Supabase persistence (must build first), Clerk roles</span>
+      <span>Risk: Medium — needs data model design</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 4 -->
+  <div class="feature-block priority-2">
+    <div class="fb-header">
+      <div class="fb-title">4. Implementation Tracker — From Plan to Action</div>
+      <span class="fb-badge p2">High Impact</span>
+    </div>
+    <div class="fb-body">
+      <p>Here's the dirty secret of tax planning: most plans don't get implemented. The client gets excited, sees $50K in savings, and then... nothing happens. Because there's no system to track what needs to be done, by whom, by when.</p>
+      <p><strong>Build this:</strong> Each strategy in a plan becomes a project with discrete action items. Example for "S-Corp Election": (1) Determine reasonable compensation → Anil, due April 15 (2) File Form 2553 → client's CPA, due March 15 (3) Set up payroll → client, due April 30 (4) Adjust quarterly estimates → Anil, due June 15. Show status: not started → in progress → complete. Send email reminders before deadlines. Show a progress bar: "4 of 8 strategies implemented — $32,400 of $67,200 savings captured."</p>
+      <p>This is what TaxPlanIQ does with their action items. But they don't tie it to deadlines and responsible parties. AgFinTax can do this better because it already has implementation steps in every strategy AND it has the advisor relationship to assign tasks.</p>
+    </div>
+    <div class="fb-why">Revenue impact: Implemented strategies = real savings = happy clients = renewals + referrals. Plans that sit in a drawer = churn.</div>
+    <div class="fb-meta">
+      <span>Effort: 2–3 weeks</span>
+      <span>Dependencies: Supabase persistence, advisor dashboard</span>
+      <span>Risk: Low</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 5 -->
+  <div class="feature-block priority-2">
+    <div class="fb-header">
+      <div class="fb-title">5. Scenario Comparison Engine — "What If?"</div>
+      <span class="fb-badge p2">High Impact</span>
+    </div>
+    <div class="fb-body">
+      <p>Every business owner asks the same question: "Should I be an S-Corp or stay as an LLC?" Every real estate investor asks: "Should I sell or do a 1031 exchange?" Every high earner asks: "Roth conversion this year or wait?"</p>
+      <p><strong>Build this:</strong> A side-by-side comparison view where the user sees two scenarios with real numbers. Scenario A: "Stay as LLC" — SE tax: $22,000, total tax: $78,000. Scenario B: "Elect S-Corp" — SE tax: $8,500, payroll costs: $3,000, total tax: $64,500. Net savings: $13,500/year. Show it as a bar chart. Show the 5-year cumulative impact. Show the compliance cost delta.</p>
+      <p>Holistiplan does this brilliantly for Roth conversions — showing bracket impact, Medicare IRMAA triggers, lifetime projections. AgFinTax needs this for entity elections, retirement plan choices, and depreciation strategies.</p>
+    </div>
+    <div class="fb-why">Revenue impact: This is the "aha moment" that closes advisory engagements. When a client sees $67,500 over 5 years on screen, they sign immediately.</div>
+    <div class="fb-meta">
+      <span>Effort: 3–4 weeks</span>
+      <span>Dependencies: Savings calculator (exists, needs expansion)</span>
+      <span>Risk: Medium — requires accurate multi-year modeling</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 6 -->
+  <div class="feature-block priority-2">
+    <div class="fb-header">
+      <div class="fb-title">6. Tax Calendar & Proactive Alerts</div>
+      <span class="fb-badge p2">High Impact</span>
+    </div>
+    <div class="fb-body">
+      <p>Tax planning is time-sensitive. Miss the March 15 S-Corp election deadline, and you wait a year. Miss a quarterly estimated payment, and you owe penalties. Miss the 45-day 1031 identification window, and the exchange fails.</p>
+      <p><strong>Build this:</strong> A dynamic tax calendar that auto-populates based on the client's plan and entity type. S-Corp? Show Form 2553 deadline, 1120-S filing date, payroll deposit schedule. Real estate? Show 1031 exchange windows. Everyone? Quarterly estimated payments, annual filing dates, strategy-specific deadlines. Send push notifications and emails: "Your Q2 estimated payment of $12,400 is due in 7 days."</p>
+      <p>This is the feature that keeps clients logging in year-round — not just during tax season. It turns AgFinTax from a planning tool into an ongoing service.</p>
+    </div>
+    <div class="fb-why">Revenue impact: Year-round engagement = annual retainer revenue, not one-time project fees. This alone could double the revenue per client.</div>
+    <div class="fb-meta">
+      <span>Effort: 2–3 weeks</span>
+      <span>Dependencies: Plan data, email service (SendGrid/Resend)</span>
+      <span>Risk: Low</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 7 -->
+  <div class="feature-block priority-3">
+    <div class="fb-header">
+      <div class="fb-title">7. Document Vault with Year-Over-Year History</div>
+      <span class="fb-badge p3">Retention Play</span>
+    </div>
+    <div class="fb-body">
+      <p>Right now, document uploads are transactional — upload, extract, forget. But think about what happens when a client has 3 years of returns, W-2s, K-1s, and strategy implementation documents all in one secure vault, organized by year and type.</p>
+      <p><strong>Build this:</strong> A secure document vault (Supabase Storage + encryption) organized by tax year with automatic tagging from OCR classification. Show a timeline: 2023 → 2024 → 2025 with documents and plans for each year. Enable year-over-year comparison: "Your effective tax rate dropped from 28.3% to 22.1% since we started working together." Show the cumulative savings from all implemented strategies across years.</p>
+      <p>This creates massive switching costs. Once a client's entire tax history lives in AgFinTax, leaving means losing all that organized data. It also gives the AI better context — 3 years of data makes strategy recommendations dramatically more accurate.</p>
+    </div>
+    <div class="fb-why">Revenue impact: Retention. A client with 3 years of data in your vault is 5x less likely to churn than one with a single plan.</div>
+    <div class="fb-meta">
+      <span>Effort: 3–4 weeks</span>
+      <span>Dependencies: Supabase Storage, OCR (exists)</span>
+      <span>Risk: Low — mostly CRUD + UI</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 8 -->
+  <div class="feature-block priority-3">
+    <div class="fb-header">
+      <div class="fb-title">8. QuickBooks / Accounting Integration</div>
+      <span class="fb-badge p3">Retention Play</span>
+    </div>
+    <div class="fb-body">
+      <p>The biggest weakness of every AI tax planning tool — including ours — is that savings estimates are based on what the client tells us, not what's actually happening in their books. A client says "I make about $200K" but their QuickBooks shows $247K with $18K in unclassified expenses. That delta changes which strategies apply and how much they save.</p>
+      <p><strong>Build this:</strong> QuickBooks Online integration via their API. Pull: YTD revenue, COGS, expenses by category, payroll data, owner draws/distributions. Use this to auto-populate the profile with real numbers. Recalculate savings estimates with actual data. Flag opportunities: "Your books show $14,200 in meals expenses — at 50% deductibility and your 32% rate, that's $2,272 you should be deducting." Refresh quarterly for real-time planning.</p>
+      <p>Instead.com already has this. It's one of their key differentiators. AgFinTax needs it to compete at the professional tier.</p>
+    </div>
+    <div class="fb-why">Revenue impact: Real numbers = confident strategies = higher implementation rates = more savings captured = stronger client relationship.</div>
+    <div class="fb-meta">
+      <span>Effort: 4–6 weeks</span>
+      <span>Dependencies: QuickBooks API (OAuth), Supabase</span>
+      <span>Risk: Medium — OAuth flow, data mapping complexity</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 9 -->
+  <div class="feature-block priority-3">
+    <div class="fb-header">
+      <div class="fb-title">9. "Tax Law Changed" — Proactive Intelligence</div>
+      <span class="fb-badge p3">Retention Play</span>
+    </div>
+    <div class="fb-body">
+      <p>Tax law changes constantly. TCJA provisions are sunsetting. New legislation affects bonus depreciation, SALT caps, estate exemptions. When something changes that affects a client's plan, they should hear about it from AgFinTax before they hear about it from the news.</p>
+      <p><strong>Build this:</strong> A tax law change notification system. When bonus depreciation drops from 100% to 80% (which it was supposed to — 2025 restored it), every client with a depreciation strategy gets an alert: "Good news: 100% bonus depreciation has been extended for 2025. Your cost segregation savings estimate has been updated from $45K to $62K." This is a RAG pipeline: ingest IRS notices and legislative updates, match to affected strategies, notify affected clients.</p>
+      <p>No competitor does this well. Corvée and TaxPlanIQ update their strategy libraries, but they don't proactively notify individual clients about how changes affect their specific plan. This is where AI shines — it can cross-reference a legislative change against 200 client profiles in seconds.</p>
+    </div>
+    <div class="fb-why">Revenue impact: Clients feel watched over. They tell friends: "My tax advisor's platform flagged a law change that saved me $12K before I even knew about it." That's referral gold.</div>
+    <div class="fb-meta">
+      <span>Effort: 4–6 weeks</span>
+      <span>Dependencies: RAG pipeline, notification system, client profiles in Supabase</span>
+      <span>Risk: Medium — needs curated data source for tax law changes</span>
+    </div>
+  </div>
+
+  <!-- FEATURE 10 -->
+  <div class="feature-block priority-4">
+    <div class="fb-header">
+      <div class="fb-title">10. Bulk Client Processing — Scale Anil's Practice</div>
+      <span class="fb-badge p4">Growth Lever</span>
+    </div>
+    <div class="fb-body">
+      <p>TaxPlanIQ's killer feature is bulk upload: drop 100 client returns, and the system ranks them by potential savings so you know who to call first. This is how a firm goes from 50 advisory clients to 500.</p>
+      <p><strong>Build this:</strong> An advisor-side bulk upload tool. Drop a folder of 1040s. The system OCRs each one, extracts profiles, runs the strategy matcher, estimates savings, and produces a ranked table: Client A — $87K savings potential (12 strategies), Client B — $52K (8 strategies), etc. Anil clicks into any client to see the full plan. One-click to convert into a branded proposal report.</p>
+      <p>This changes the economics of Anil's practice. Instead of spending 2 hours per client doing intake and analysis, the AI does it in 2 minutes. Anil spends his time on the top-20 highest-value clients. The platform handles the rest.</p>
+    </div>
+    <div class="fb-why">Revenue impact: If Anil can analyze 100 clients in a day instead of 5, the advisory fee revenue per hour of his time increases 20x.</div>
+    <div class="fb-meta">
+      <span>Effort: 4–6 weeks</span>
+      <span>Dependencies: Advisor dashboard, OCR pipeline (exists), batch processing</span>
+      <span>Risk: Medium — needs queue management, error handling at scale</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHAT NOT TO BUILD ===== -->
+<section>
+  <div class="label">Equally Important</div>
+  <h2>What NOT to Build (Traps to Avoid)</h2>
+
+  <div class="grid-2">
+    <div class="g-card" style="border-top: 3px solid var(--red);">
+      <div class="g-title">Don't: Build a general-purpose tax chatbot</div>
+      <div class="g-body">TaxGPT already exists. 50,000 tax professionals use it. Competing on "ask any tax question" is a losing game. AgFinTax's chat should be strategy-specific and profile-aware, not a general Q&A engine. The chat exists to serve the plan, not replace Google.</div>
+    </div>
+    <div class="g-card" style="border-top: 3px solid var(--red);">
+      <div class="g-title">Don't: Add more strategies without depth</div>
+      <div class="g-body">Corvée has 1,500 strategies. Competing on quantity is pointless. AgFinTax's 57 strategies are enough — what matters is the depth of qualification, the accuracy of savings estimates, and the implementation guidance. Go deeper, not wider.</div>
+    </div>
+    <div class="g-card" style="border-top: 3px solid var(--red);">
+      <div class="g-title">Don't: Build tax preparation features</div>
+      <div class="g-body">Tax preparation (filing returns) is a commodity business. TurboTax, Drake, UltraTax own that market. AgFinTax is a tax PLANNING tool — the high-value advisory work that happens before the return is filed. Stay in the advisory lane.</div>
+    </div>
+    <div class="g-card" style="border-top: 3px solid var(--red);">
+      <div class="g-title">Don't: Over-invest in the landing page</div>
+      <div class="g-body">The current landing page is fine. The conversion problem isn't design — it's that visitors don't see value fast enough. The "Money Finder" (feature #1) solves this. A fancier landing page without instant value is lipstick on a pig.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRIORITY ORDER ===== -->
+<section>
+  <div class="label">Build Order</div>
+  <h2>The Sequence That Maximizes Revenue Impact</h2>
+
+  <p>Don't build all 10 features at once. Here's the order that compounds value at each step:</p>
+
+  <p class="callout"><strong>Sprint 1 (Weeks 1–3):</strong> Supabase persistence + "Money Finder" landing page widget. These are prerequisites — persistence unlocks everything else, and the Money Finder starts converting visitors immediately.</p>
+
+  <p class="callout"><strong>Sprint 2 (Weeks 3–6):</strong> Branded PDF report + Advisor dashboard (basic). These are the revenue-critical pair. Anil needs something to hand clients AND a way to manage his practice. Together, they justify premium fees.</p>
+
+  <p class="callout"><strong>Sprint 3 (Weeks 6–9):</strong> Implementation tracker + Tax calendar. These turn one-time plans into ongoing relationships. They're what make clients stay for year 2 and year 3.</p>
+
+  <p class="callout"><strong>Sprint 4 (Weeks 9–13):</strong> Scenario comparison + Document vault. These are the "wow" features that make clients say "I've never seen anything like this from a tax firm." They drive referrals.</p>
+
+  <p class="callout"><strong>Sprint 5 (Weeks 13–18):</strong> QuickBooks integration + Tax law alerts + Bulk processing. These are the scale features that take the practice from $1M to $5M revenue by making Anil's time 10x more leveraged.</p>
+
+  <p class="insight"><strong>The north star metric:</strong> Revenue per client per year. Everything we build should either increase the fee Anil can charge, increase the number of clients he can serve, or increase the retention rate so clients stay longer. If a feature doesn't move one of these three levers, don't build it.</p>
+</section>
+
+<!-- ===== FINAL THOUGHT ===== -->
+<section style="border-bottom: none;">
+  <div class="label">The Bottom Line</div>
+  <h2>AgFinTax Isn't an AI Product. It's Anil's Brain, Scaled.</h2>
+
+  <p>The competitors are building AI tools for tax professionals. That's the wrong frame. AgFinTax should be building <strong>Anil's practice, amplified by AI</strong>. The difference is subtle but critical:</p>
+
+  <p>An AI tool says: "Here are 8 strategies. Good luck."</p>
+  <p>Anil's practice, amplified, says: "Anil's team has identified $67,200 in savings for you this year. Here's your personalized plan. We're tracking 4 deadlines for you. Your S-Corp election is due in 23 days — we've prepared the form. Your Q2 estimated payment has been adjusted based on your new strategy. You've saved $32,400 so far this year. Here's your year-over-year progress."</p>
+
+  <p>The first one competes with Instead at $16/month. The second one justifies $5,000–$15,000/year in advisory fees. That's the product to build.</p>
+</section>
+
+</div>
+
+<div class="footer">
+  <p>AgFinTax Planning AI — Strategic Product Vision v1.0<br/>
+  March 2026 &middot; Built & Powered by <a href="https://loukriai.com">LoukriAI.com</a></p>
+</div>
+
+</body>
+</html>

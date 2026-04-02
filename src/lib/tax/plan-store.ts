@@ -88,7 +88,8 @@ export interface SavedPlan {
     estimatedSavings: number;
     savingsMin: number;
     savingsMax: number;
-    isPlanned?: boolean; // Phase 2: planned vs additional
+    implementationSteps?: string[];
+    isPlanned?: boolean;
   }>;
   totalSavings: number;
   createdAt: string;
@@ -536,8 +537,12 @@ export function analyzeProfileForEntity(
 
 const PROFILE_KEY = "agfintax_client_profile";
 const PLAN_KEY = "agfintax_smart_plan";
+const PLAN_HISTORY_KEY = "agfintax_plan_history";
 const DOCS_KEY = "agfintax_documents";
 const ENTITY_KEY = "agfintax_entity_type";
+
+/** Max plans allowed on free tier */
+export const FREE_PLAN_LIMIT = 5;
 
 // ---------------------------------------------------------------------------
 // Client Profile persistence
@@ -650,6 +655,8 @@ export function clearEntityType(): void {
 export function savePlan(plan: SavedPlan): void {
   if (typeof window !== "undefined") {
     localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+    // Also add to history
+    addPlanToHistory(plan);
   }
 }
 
@@ -680,6 +687,68 @@ export function clearPlan(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(PLAN_KEY);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Plan History — persists all generated plans, enforces free-tier limit
+// ---------------------------------------------------------------------------
+
+export interface PlanHistoryEntry extends SavedPlan {
+  id: string;       // unique identifier
+  label?: string;    // user-facing label e.g. "Plan #2 — S-Corp"
+}
+
+function addPlanToHistory(plan: SavedPlan): void {
+  if (typeof window === "undefined") return;
+  const history = getPlanHistory();
+  const entry: PlanHistoryEntry = {
+    ...plan,
+    id: `plan_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    label: `Plan #${history.length + 1} — ${plan.entityType.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}`,
+  };
+  history.push(entry);
+  localStorage.setItem(PLAN_HISTORY_KEY, JSON.stringify(history));
+}
+
+export function getPlanHistory(): PlanHistoryEntry[] {
+  if (typeof window === "undefined") return [];
+  const data = localStorage.getItem(PLAN_HISTORY_KEY);
+  if (!data) return [];
+  return JSON.parse(data) as PlanHistoryEntry[];
+}
+
+export function getPlanCount(): number {
+  return getPlanHistory().length;
+}
+
+export function canCreatePlan(): boolean {
+  return getPlanCount() < FREE_PLAN_LIMIT;
+}
+
+export function getRemainingPlans(): number {
+  return Math.max(0, FREE_PLAN_LIMIT - getPlanCount());
+}
+
+export function loadPlanFromHistory(planId: string): SavedPlan | null {
+  const history = getPlanHistory();
+  const entry = history.find((p) => p.id === planId);
+  if (!entry) return null;
+  // Set as current plan
+  if (typeof window !== "undefined") {
+    localStorage.setItem(PLAN_KEY, JSON.stringify(entry));
+  }
+  return entry;
+}
+
+export function deletePlanFromHistory(planId: string): void {
+  if (typeof window === "undefined") return;
+  const history = getPlanHistory().filter((p) => p.id !== planId);
+  localStorage.setItem(PLAN_HISTORY_KEY, JSON.stringify(history));
+}
+
+export function clearPlanHistory(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(PLAN_HISTORY_KEY);
 }
 
 export function saveDocuments(docs: UploadedDocument[]): void {
