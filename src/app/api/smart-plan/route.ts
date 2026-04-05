@@ -27,6 +27,8 @@ interface ReferenceStrategy {
   typicalSavingsRange: { min: number; max: number };
   eligibilityCriteria: string[];
   implementationSteps: string[];
+  calculatedSavings?: number;
+  calculationExplanation?: string;
 }
 
 // Entity-specific strategy focus areas
@@ -109,7 +111,7 @@ function repairJSON(raw: string): string {
   return s;
 }
 
-function buildPrompt(profile: SmartPlanProfile, marginalRate: number, strategies: ReferenceStrategy[]): string {
+function buildPrompt(profile: SmartPlanProfile, marginalRate: number, strategies: ReferenceStrategy[], qualificationAnswers?: Record<string, string>): string {
   const entityType = profile.entityType || "individual";
   const entityFocus = ENTITY_STRATEGY_FOCUS[entityType] || ENTITY_STRATEGY_FOCUS.individual;
   const entityLabel = entityType === "s_corp" ? "S-Corporation (1120-S)"
@@ -120,14 +122,31 @@ function buildPrompt(profile: SmartPlanProfile, marginalRate: number, strategies
 
   // Build strategy reference block from our curated library
   const strategyBlock = strategies.map((s, i) => {
+    const calcLine = s.calculatedSavings !== undefined
+      ? `\n   CALCULATED SAVINGS: $${s.calculatedSavings.toLocaleString()} (${s.calculationExplanation || 'math-based'})`
+      : '';
     return `${i + 1}. [${s.id}] ${s.title} (${s.category})
    IRC: ${s.ircReference}
    Formula: ${s.savingsFormula}
    Typical range: $${s.typicalSavingsRange.min.toLocaleString()}-$${s.typicalSavingsRange.max.toLocaleString()}
-   Eligibility: ${s.eligibilityCriteria.slice(0, 2).join("; ")}`;
+   Eligibility: ${s.eligibilityCriteria.slice(0, 2).join("; ")}${calcLine}`;
   }).join("\n");
 
-  return `You are a tax planning advisor for AG FinTax. Your job is to PERSONALIZE the pre-matched strategies below for this specific client.
+  // Include qualification answers for context
+  const answersBlock = qualificationAnswers && Object.keys(qualificationAnswers).length > 0
+    ? Object.entries(qualificationAnswers)
+      .filter(([, v]) => v && v !== 'yes' && v !== 'no') // Only include substantive answers (dollar amounts, choices)
+      .map(([k, v]) => `- ${k.replace(/-/g, ' ')}: ${v}`)
+      .join('\n')
+    : '';
+  const yesNoBlock = qualificationAnswers && Object.keys(qualificationAnswers).length > 0
+    ? Object.entries(qualificationAnswers)
+      .filter(([, v]) => v === 'yes' || v === 'no')
+      .map(([k, v]) => `- ${k.replace(/-/g, ' ')}: ${v}`)
+      .join('\n')
+    : '';
+
+  return `You are a tax planning advisor for AG FinTax. Your job is to write PERSONALIZED descriptions for the pre-matched strategies below. The savings numbers have been CALCULATED using the client's actual qualification answers — use them as-is.
 
 ENTITY TYPE: ${entityLabel}
 ${entityFocus}
@@ -143,35 +162,42 @@ CLIENT PROFILE:
 - Mortgage: ${profile.hasMortgage ? "Yes" : "No"}
 - State: ${profile.state || "Not specified"}
 - Additional: ${profile.additionalInfo || "None"}
+${answersBlock ? `\nCLIENT'S QUALIFICATION ANSWERS (dollar amounts and specific data):\n${answersBlock}` : ''}
+${yesNoBlock ? `\nCLIENT'S ELIGIBILITY ANSWERS:\n${yesNoBlock}` : ''}
 
 PRE-MATCHED STRATEGIES FROM OUR LIBRARY (${strategies.length} matched):
 ${strategyBlock}
 
 YOUR TASK:
-1. For EACH strategy above, calculate the ACTUAL estimated tax savings for THIS client using their income ($${profile.income.toLocaleString()}) and marginal rate (${marginalRate}%).
-2. Write a 2-3 sentence description personalized to THIS client (reference their specific situation, not generic advice).
-3. Keep the same id, title, category, and ircReference from the library.
-4. estimatedSavings = ACTUAL TAX REDUCTION (deductions × ${marginalRate}%, credits = dollar-for-dollar).
-5. If a strategy doesn't truly apply to this client after closer analysis, exclude it.
-6. Sort by estimatedSavings descending.
+1. For EACH strategy above, write a 2-3 sentence personalized description referencing the client's SPECIFIC numbers from their qualification answers.
+2. Keep the same id, title, category, and ircReference from the library.
+3. If the strategy has CALCULATED SAVINGS shown above, use EXACTLY that number for estimatedSavings. Do NOT invent a different number.
+4. If no calculated savings are shown, calculate: deductions × ${marginalRate}% marginal rate, credits = dollar-for-dollar.
+5. For savingsMin and savingsMax: use the calculated range if available, otherwise estimate conservatively.
+6. Include the actual math in descriptions (e.g., "2 children × $2,000 = $4,000 credit" or "$23,500 × 24% = $5,640 savings").
+7. Sort by estimatedSavings descending.
+8. For long-term/future-benefit strategies ($0 immediate savings), explain WHY there is no current-year benefit.
 
 CRITICAL CONSTRAINTS:
 - You MUST ONLY use strategies from the pre-matched list above. Do NOT generate, suggest, or invent any strategies not in this list.
 - Every strategy in your response MUST have an id that matches one from the pre-matched list.
-- If you believe a strategy from outside this list would benefit the client, note it in that strategy's description as "Also consider..." but do NOT add it as a separate strategy.
+- The savings numbers are AUTHORITATIVE — they were computed from the client's actual answers using IRS formulas. Do NOT change them.
+- Reference the client's actual numbers (income, dependents, contribution amounts, expense amounts) in each description.
 - This is a curated, compliance-reviewed strategy library. Do not deviate from it.
 
 Return ONLY valid JSON (no markdown, no code fences):
-{"totalEstimatedSavings":<number>,"strategies":[{"id":"<from library>","category":"<from library>","title":"<from library>","description":"<personalized 2-3 sentences>","estimatedSavings":<number>,"savingsMin":<number>,"savingsMax":<number>,"ircReference":"<from library>","applicability":"<High|Medium|Low>","implementationSteps":["step1 for this client","step2","step3"]}]}`;
+{"totalEstimatedSavings":<number>,"strategies":[{"id":"<from library>","category":"<from library>","title":"<from library>","description":"<personalized 2-3 sentences with MATH showing how savings were calculated>","estimatedSavings":<number>,"savingsMin":<number>,"savingsMax":<number>,"ircReference":"<from library>","applicability":"<High|Medium|Low>","implementationSteps":["step1 for this client","step2","step3"]}]}`;
 }
 
 export async function POST(req: Request) {
   const startTime = Date.now();
   try {
-    const { profile, referenceStrategies, referenceStrategyData } = await req.json() as {
+    const { profile, referenceStrategies, referenceStrategyData, qualificationAnswers, marginalRate: clientMarginalRate } = await req.json() as {
       profile: SmartPlanProfile;
       referenceStrategies?: string[];
       referenceStrategyData?: ReferenceStrategy[];
+      qualificationAnswers?: Record<string, string>;
+      marginalRate?: number;
     };
     const apiKey = process.env.OPENROUTER_API_KEY;
 
@@ -179,28 +205,28 @@ export async function POST(req: Request) {
     console.log(`Profile: ${profile.occupation}, $${profile.income.toLocaleString()}, ${profile.filingStatus}, ${profile.entityType || "individual"}`);
     console.log(`Strategy data objects: ${referenceStrategyData?.length || 0}`);
     console.log(`Strategy name hints: ${referenceStrategies?.length || 0}`);
+    console.log(`Qualification answers: ${qualificationAnswers ? Object.keys(qualificationAnswers).length : 0}`);
 
     if (!apiKey) {
       return Response.json({ error: "OPENROUTER_API_KEY not configured. Set it in .env.local" }, { status: 500 });
     }
 
-    // 2025 federal income tax brackets (single filer thresholds — system prompt has MFJ brackets)
-    const marginalRate = profile.income >= 626350 ? 37
+    // Use client-calculated marginal rate if provided, otherwise estimate from income
+    const marginalRate = clientMarginalRate || (profile.income >= 626350 ? 37
       : profile.income >= 250525 ? 35
       : profile.income >= 197300 ? 32
       : profile.income >= 103350 ? 24
       : profile.income >= 48475 ? 22
       : profile.income >= 11925 ? 12
-      : 10;
+      : 10);
 
-    const prompt = buildPrompt(profile, marginalRate, referenceStrategyData || []);
+    const prompt = buildPrompt(profile, marginalRate, referenceStrategyData || [], qualificationAnswers);
     const systemContent = TAX_SYSTEM_PROMPT + "\n\nRespond with ONLY valid JSON. No markdown, no explanation, no code blocks.";
 
     // Models in priority order
     const models = [
+      "openai/gpt-5.4",
       "anthropic/claude-sonnet-4",
-      "anthropic/claude-3.5-sonnet",
-      "openai/gpt-4o-mini",
     ];
 
     let lastError = "";

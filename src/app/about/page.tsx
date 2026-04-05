@@ -42,11 +42,11 @@ const stagger = {
 
 const services = [
   { title: "Tax Planning", desc: "Year-round proactive planning for small businesses and high-net-worth individuals", icon: Target },
-  { title: "Virtual CFO Services", desc: "Fractional CFO leadership with AI-augmented financial intelligence", icon: Briefcase },
+  { title: "Virtual CFO Services", desc: "Fractional CFO leadership with expert financial intelligence", icon: Briefcase },
   { title: "R&D Tax Credits", desc: "Identify and claim Section 41 credits for innovation-driven businesses", icon: Brain },
   { title: "Estate Planning", desc: "Protect generational wealth with strategic trust and entity structures", icon: Shield },
   { title: "Indian Compliance", desc: "Cross-border India-US tax compliance, PFIC reporting, DTAA optimization", icon: Globe },
-  { title: "Dynamic Bookkeeping", desc: "AI-enhanced monthly bookkeeping and real-time financial reporting", icon: TrendingUp },
+  { title: "Dynamic Bookkeeping", desc: "Technology-enhanced monthly bookkeeping and real-time financial reporting", icon: TrendingUp },
 ];
 
 const industries = [
@@ -57,9 +57,9 @@ const industries = [
 ];
 
 const testimonials = [
-  { name: "Rajesh K.", role: "IT Consulting Firm Owner", text: "Anil and AG FinTax saved us over $45,000 in our first year. The AI platform made document submission effortless.", rating: 5 },
+  { name: "Rajesh K.", role: "IT Consulting Firm Owner", text: "Anil and AG FinTax saved us over $45,000 in our first year. The platform made document submission effortless.", rating: 5 },
   { name: "Priya M.", role: "Healthcare Professional", text: "The cross-border tax expertise is unmatched. They handled my India-US tax situation with incredible precision.", rating: 5 },
-  { name: "David L.", role: "Real Estate Investor", text: "Cost segregation study recommendation alone saved me $28,000. The AI review caught deductions my previous CPA missed.", rating: 5 },
+  { name: "David L.", role: "Real Estate Investor", text: "Cost segregation study recommendation alone saved me $28,000. The review caught deductions my previous CPA missed.", rating: 5 },
 ];
 
 export default function AboutPage() {
@@ -120,7 +120,7 @@ export default function AboutPage() {
               </span>
             </motion.h1>
             <motion.p variants={fadeInUp} className="mt-6 text-xl leading-relaxed text-[#C7C5D3]">
-              AG FinTax is a full-service tax advisory and financial planning firm, now supercharged with AI-powered intelligence to deliver unmatched results for our clients.
+              AG FinTax is a full-service tax advisory and financial planning firm, supercharged with Anil Grandhi&apos;s proprietary planning methodology to deliver unmatched results for our clients.
             </motion.p>
           </motion.div>
         </div>
@@ -182,7 +182,7 @@ export default function AboutPage() {
                   Anil Grandhi is the visionary founder of AG FinTax, bringing decades of expertise in tax strategy, financial planning, and business advisory. His deep understanding of the U.S. tax code, combined with specialized knowledge in cross-border India-US taxation, makes him one of the most sought-after tax professionals for dynamic business owners and high-net-worth individuals.
                 </p>
                 <p>
-                  Under Anil&apos;s leadership, AG FinTax has grown to serve 15,000+ clients across all 50 states, managing over $2.4 billion in capital. His forward-thinking approach led to the development of this AI-powered platform — merging traditional CPA expertise with cutting-edge artificial intelligence to deliver tax savings that were previously impossible to identify manually.
+                  Under Anil&apos;s leadership, AG FinTax has grown to serve 15,000+ clients across all 50 states, managing over $2.4 billion in capital. His forward-thinking approach led to the development of this proprietary platform — merging decades of CPA expertise with cutting-edge technology to deliver tax savings that were previously impossible to identify manually.
                 </p>
                 <p>
                   Anil specializes in serving IT & ITES firms, hospitality businesses, real estate investors, and healthcare professionals. His clients consistently report savings of $20,000–$100,000+ annually through his innovative strategies, including entity optimization, cost segregation, R&D credits, and proactive year-round planning.
@@ -232,7 +232,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 { icon: Heart, title: "Client-First Philosophy", desc: "Every strategy is tailored to your unique financial situation. We don't do cookie-cutter tax prep — we architect custom financial structures." },
-                { icon: Brain, title: "AI + Human Expertise", desc: "Our platform combines Anil's decades of CPA expertise with neural tax engines that scan thousands of IRC codes per second. The best of both worlds." },
+                { icon: Brain, title: "Technology + Human Expertise", desc: "Our platform combines Anil's decades of CPA expertise with proprietary tax engines that scan thousands of IRC codes per second. The best of both worlds." },
                 { icon: GraduationCap, title: "Education & Empowerment", desc: "Through webinars, resources, and one-on-one consultations, we ensure you understand every strategy we implement. Informed clients make better decisions." },
               ].map((item) => (
                 <motion.div key={item.title} variants={fadeInUp} className="glass-card rounded-3xl p-10">
@@ -416,7 +416,7 @@ export default function AboutPage() {
                 <span className="text-xl font-bold tracking-tight text-[#E4E1E9]">AgFinTax</span>
               </Link>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#908F9C]">
-                The Financial Architect. AI-powered tax optimization and liquidity modeling engineered for precision.
+                The Financial Architect. Expert tax optimization and planning engineered for precision by Anil Grandhi, CPA.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-8">

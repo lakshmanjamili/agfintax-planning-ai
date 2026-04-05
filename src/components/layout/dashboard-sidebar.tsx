@@ -7,13 +7,10 @@ import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Brain,
-  TrendingUp,
   User,
   Settings,
   Sparkles,
   Building2,
-  Newspaper,
-  Video,
   Moon,
   Sun,
 } from "lucide-react";
@@ -23,15 +20,12 @@ import { useTheme } from "@/lib/theme-context";
 
 const mainNavItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Build Profile", icon: User, href: "/dashboard/profile" },
   { label: "Smart Plan", icon: Sparkles, href: "/dashboard/smart-plan" },
-  { label: "Strategies", icon: TrendingUp, href: "/dashboard/strategies" },
-  { label: "Tax Chat", icon: Brain, href: "/dashboard/tax-chat" },
-  { label: "Blog", icon: Newspaper, href: "/dashboard/blog" },
-  { label: "Videos", icon: Video, href: "/dashboard/content" },
+  { label: "Ask AG", icon: Brain, href: "/dashboard/tax-chat" },
 ];
 
 const bottomNavItems = [
-  { label: "Build Profile", icon: User, href: "/dashboard/profile" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings" },
 ];
 
@@ -94,7 +88,7 @@ export function SidebarContent() {
               AgFinTax
             </h1>
             <p className="text-[10px] uppercase tracking-widest text-orange-500">
-              AI Financial Architect
+              Tax Planning Experts
             </p>
           </div>
         </div>
@@ -178,7 +172,7 @@ export function SidebarContent() {
             </span>
           </div>
           <p className={cn("mt-1.5 text-xs leading-relaxed", isDark ? "text-slate-400" : "text-slate-500")}>
-            Unlock advanced AI strategies and priority support.
+            Unlock advanced strategies and priority support.
           </p>
           <button className="mt-3 w-full rounded-lg bg-gradient-to-r from-orange-600 to-orange-400 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/20 transition-all hover:shadow-orange-900/40">
             Upgrade to Pro

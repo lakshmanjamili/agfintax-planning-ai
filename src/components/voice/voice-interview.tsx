@@ -239,7 +239,7 @@ export default function VoiceInterview({ sections, onComplete, entityType, profi
           <div className="flex justify-center mb-4">
             <div className="flex items-center gap-2 text-xs text-cyan-400/70">
               <Volume2 className="w-4 h-4 animate-pulse" />
-              AI is speaking...
+              Speaking...
             </div>
           </div>
         )}
@@ -257,7 +257,7 @@ export default function VoiceInterview({ sections, onComplete, entityType, profi
           <button
             onClick={toggleMute}
             className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition-all"
-            title={isMuted ? "Unmute AI voice" : "Mute AI voice"}
+            title={isMuted ? "Unmute voice" : "Mute voice"}
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -416,7 +416,7 @@ function VoiceWaveform() {
 function getPhaseLabel(phase: VoicePhase): string {
   switch (phase) {
     case "idle": return "Ready to start";
-    case "speaking": return "AI is asking a question...";
+    case "speaking": return "Asking a question...";
     case "listening": return "Listening — speak your answer";
     case "processing": return "Processing your response...";
     case "transitioning": return "Moving to next topic...";
