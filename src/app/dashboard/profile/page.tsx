@@ -487,38 +487,40 @@ export default function ProfilePage() {
   }, [profile, updateProfile, processOneFile]);
 
   // Re-analyze: send ALL document data + previous summary to LLM for a holistic update
+  // IMPORTANT: reads from localStorage (always fresh) — NOT from React state (can be stale in closures)
   const handleReanalyze = useCallback(async () => {
-    const docs = profile.uploadedDocuments || [];
+    // Read latest profile from localStorage to avoid stale closure issues
+    const latestProfile = getClientProfile() || profile;
+    const docs = latestProfile.uploadedDocuments || [];
     if (docs.length === 0) return;
     setIsReanalyzing(true);
     try {
-      // Previous holistic summary — the LLM builds on top of this
-      const previousSummary = profile.comprehensiveSummary || profile.ocrSummary || "";
+      const previousSummary = latestProfile.comprehensiveSummary || latestProfile.ocrSummary || "";
 
-      // Per-document details
       const docSummaries = docs
         .map((d, i) => `Document ${i + 1}: ${d.documentType.toUpperCase()} (${d.fileName})\nSummary: ${d.summary || "N/A"}\nKey findings: ${(d.keyFindings || []).join("; ") || "N/A"}\nExtracted: ${JSON.stringify(d.extractedFields || {})}`)
         .join("\n\n");
 
-      // Current profile fields
       const profileFields = [
-        `Entity: ${profile.entityType}`,
-        `Filing: ${profile.filingStatus}`,
-        `Income: ${profile.annualIncome || "unknown"}`,
-        `State: ${profile.state || "unknown"}`,
-        `Dependents: ${profile.dependents || 0}`,
-        profile.occupation ? `Occupation: ${profile.occupation}` : "",
-        profile.incomeSources.length > 0 ? `Income sources: ${profile.incomeSources.join(", ")}` : "",
-        profile.retirementAccountTypes.length > 0 ? `Retirement: ${profile.retirementAccountTypes.join(", ")}` : "",
-        profile.hasRealEstate ? "Has real estate" : "",
-        profile.hasInvestments ? "Has investments" : "",
-        profile.hasCharitableGiving ? "Has charitable giving" : "",
-        profile.hasHealthInsurance ? "Has health insurance" : "",
-        profile.hasMortgage ? "Has mortgage" : "",
-        profile.hasStudentLoans ? "Has student loans" : "",
+        `Entity: ${latestProfile.entityType}`,
+        `Filing: ${latestProfile.filingStatus}`,
+        `Income: ${latestProfile.annualIncome || "unknown"}`,
+        `State: ${latestProfile.state || "unknown"}`,
+        `Dependents: ${latestProfile.dependents || 0}`,
+        latestProfile.occupation ? `Occupation: ${latestProfile.occupation}` : "",
+        latestProfile.incomeSources.length > 0 ? `Income sources: ${latestProfile.incomeSources.join(", ")}` : "",
+        latestProfile.retirementAccountTypes.length > 0 ? `Retirement: ${latestProfile.retirementAccountTypes.join(", ")}` : "",
+        latestProfile.hasRealEstate ? "Has real estate" : "",
+        latestProfile.hasInvestments ? "Has investments" : "",
+        latestProfile.hasCharitableGiving ? "Has charitable giving" : "",
+        latestProfile.hasHealthInsurance ? "Has health insurance" : "",
+        latestProfile.hasMortgage ? "Has mortgage" : "",
+        latestProfile.hasStudentLoans ? "Has student loans" : "",
       ].filter(Boolean).join(" | ");
 
       const reanalyzePrompt = `You are a senior CPA at AG FinTax (Anil Grandhi's firm). Never mention AI, LLM, or machine learning. You are re-analyzing a client's complete financial profile after new documents were added.
+
+IMPORTANT CONTEXT: This is a married filing jointly household. Multiple W-2s from different employers (and possibly different spouses) should be COMBINED into total household income. Do NOT treat each W-2 as a separate taxpayer.
 
 CURRENT PROFILE: ${profileFields}
 
@@ -531,21 +533,24 @@ ${docSummaries}
 YOUR TASK:
 Build on the previous analysis. Incorporate ALL documents — old and new — into ONE unified holistic profile. Do not lose any information from the previous analysis. If new documents add income, investments, deductions, or other data, merge them into the totals.
 
-ALSO: If the documents show a different total income than the profile's "${profile.annualIncome || "unknown"}", state the corrected total.
+CRITICAL: Add up ALL W-2 wages to get total household income. If the profile says "${latestProfile.annualIncome || "unknown"}" but documents show a different total, state the corrected total.
 
 FORMAT YOUR RESPONSE AS:
 ## 1. Holistic summary
-2-3 sentences covering the complete financial picture across ALL documents.
+2-3 sentences covering the COMPLETE financial picture across ALL documents. State total combined household income.
 
 ## 2. Key numbers
-All financial figures: total income (broken down by source), AGI estimate, 401(k) deferrals, withholding, deductions, credits, investment data, etc. Use bold for dollar amounts.
+All financial figures: total income (broken down by source/employer), AGI estimate, total 401(k) deferrals (by employer), total withholding (federal + state), deductions, credits, investment data, etc. Use bold for dollar amounts.
 
 ## 3. Top 3 actionable observations for tax planning
 Specific, numbered strategies with IRC references and estimated savings ranges.
 
 ## 4. Profile corrections
-If any profile fields need updating (income, flags, etc.), list them as:
-- FIELD: correctedValue
+List any profile fields that need updating:
+- annualIncome: $TOTAL (combined from all W-2s)
+- filingStatus: mfj (if multiple spouses detected)
+- dependents: N (if evidence found)
+- Any boolean flags that should be true
 
 Be specific with dollar amounts. Reference IRC sections. No disclaimers.`;
 
@@ -559,7 +564,6 @@ Be specific with dollar amounts. Reference IRC sections. No disclaimers.`;
 
       if (!res.ok) throw new Error("Re-analysis failed");
 
-      // Read the streaming response
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
@@ -575,16 +579,27 @@ Be specific with dollar amounts. Reference IRC sections. No disclaimers.`;
       if (fullText.trim()) {
         const analysisText = fullText.trim();
 
-        // Parse profile corrections from section 4 if present
-        const correctedProfile = { ...profile };
+        // Start with latest profile from localStorage (NOT stale React state)
+        const correctedProfile = { ...latestProfile };
         const correctionsMatch = analysisText.match(/##\s*4\.\s*Profile corrections([\s\S]*?)(?:##|$)/i);
         if (correctionsMatch) {
           const corrections = correctionsMatch[1];
-          // Parse "- FIELD: value" lines
-          const incomeMatch = corrections.match(/income[^:]*:\s*\$?([\d,]+)/i);
+          // Parse income correction
+          const incomeMatch = corrections.match(/annualIncome[^:]*:\s*\$?([\d,]+)/i);
           if (incomeMatch) {
             correctedProfile.annualIncome = `$${incomeMatch[1]}`;
           }
+          // Parse filing status correction
+          const filingMatch = corrections.match(/filingStatus[^:]*:\s*(mfj|single|mfs|hoh)/i);
+          if (filingMatch) {
+            correctedProfile.filingStatus = filingMatch[1].toLowerCase();
+          }
+          // Parse dependents correction
+          const depMatch = corrections.match(/dependents[^:]*:\s*(\d+)/i);
+          if (depMatch) {
+            correctedProfile.dependents = parseInt(depMatch[1]);
+          }
+          // Boolean flags — only turn ON
           if (/hasInvestments[^:]*:\s*true/i.test(corrections)) correctedProfile.hasInvestments = true;
           if (/hasRealEstate[^:]*:\s*true/i.test(corrections)) correctedProfile.hasRealEstate = true;
           if (/hasCharitableGiving[^:]*:\s*true/i.test(corrections)) correctedProfile.hasCharitableGiving = true;
@@ -593,7 +608,6 @@ Be specific with dollar amounts. Reference IRC sections. No disclaimers.`;
           if (/hasStudentLoans[^:]*:\s*true/i.test(corrections)) correctedProfile.hasStudentLoans = true;
         }
 
-        // Store as both ocrSummary (profile display) and comprehensiveSummary (Smart Plan)
         correctedProfile.ocrSummary = analysisText;
         correctedProfile.comprehensiveSummary = analysisText;
 
