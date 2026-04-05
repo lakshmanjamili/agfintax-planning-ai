@@ -640,7 +640,7 @@ export default function TaxCalculatorPage() {
                     Want to save {formatUSD(Math.max(5000, result.totalTax * 0.15))}+ more?
                   </h3>
                   <p className="text-sm text-[#C7C5D3] mb-4 max-w-md mx-auto">
-                    AG FinTax's Smart Plan identifies personalized tax strategies based on your unique situation. Business owners typically save 15-40% on their taxes.
+                    AG FinTax&apos;s Smart Plan identifies personalized tax strategies based on your unique situation. Business owners typically save 15-40% on their taxes.
                   </p>
                   <Link
                     href="/dashboard/smart-plan"
