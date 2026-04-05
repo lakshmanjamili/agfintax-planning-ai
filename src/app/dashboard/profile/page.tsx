@@ -331,7 +331,22 @@ export default function ProfilePage() {
         // --- Core fields: tax return overrides, other docs fill gaps ---
         if (fields.occupation && (isTaxReturn || !currentProfile.occupation)) currentProfile.occupation = fields.occupation;
         if (fields.filingStatus && (isTaxReturn || !currentProfile.filingStatus)) currentProfile.filingStatus = fields.filingStatus;
-        if (fields.annualIncome && (isTaxReturn || !currentProfile.annualIncome)) currentProfile.annualIncome = fields.annualIncome;
+        // Income: W-2s ACCUMULATE (add up wages), tax return OVERRIDES with AGI
+        if (fields.annualIncome) {
+          if (isTaxReturn) {
+            // Tax return has the definitive AGI — use it directly
+            currentProfile.annualIncome = fields.annualIncome;
+          } else if (docType === "w2") {
+            // W-2: add wages to running total
+            const newWages = parseFloat(String(fields.annualIncome).replace(/[$,]/g, "")) || 0;
+            const existingIncome = parseFloat(String(currentProfile.annualIncome || "0").replace(/[$,]/g, "")) || 0;
+            const total = existingIncome + newWages;
+            currentProfile.annualIncome = `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          } else if (!currentProfile.annualIncome) {
+            // Other doc types: only fill gap
+            currentProfile.annualIncome = fields.annualIncome;
+          }
+        }
         if (typeof fields.dependents === "number" && (isTaxReturn || currentProfile.dependents === 0)) currentProfile.dependents = fields.dependents;
         if (fields.state && (isTaxReturn || !currentProfile.state)) currentProfile.state = fields.state;
         if (fields.businessName && (isTaxReturn || !currentProfile.businessName)) currentProfile.businessName = fields.businessName;
@@ -356,11 +371,9 @@ export default function ProfilePage() {
         if (fields.hasHealthInsurance === true) currentProfile.hasHealthInsurance = true;
         if (fields.hasStudentLoans === true) currentProfile.hasStudentLoans = true;
 
-        // --- OCR summary: latest tax return wins, others append ---
+        // --- OCR summary: keep last doc's summary as placeholder until re-analyze runs ---
         if (data.summary) {
-          if (isTaxReturn || !currentProfile.ocrSummary) {
-            currentProfile.ocrSummary = data.summary;
-          }
+          currentProfile.ocrSummary = data.summary;
         }
 
         // --- Extracted fields: MERGE — only upgrade, never downgrade ---
@@ -456,6 +469,14 @@ export default function ProfilePage() {
       // Show suggestions
       if (allSuggestions.length > 0) {
         setOcrSuggestions(allSuggestions);
+      }
+
+      // Auto-trigger holistic re-analysis after multi-file upload
+      // so the Document Summary combines ALL documents, not just the first one
+      if ((currentProfile.uploadedDocuments || []).length > 1) {
+        setTimeout(() => {
+          handleReanalyze();
+        }, 500);
       }
     } catch (err) {
       console.error("OCR upload error:", err);
