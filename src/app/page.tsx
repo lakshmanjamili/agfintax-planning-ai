@@ -50,9 +50,9 @@ const features = [
   {
     icon: Brain,
     bgIcon: Brain,
-    title: "Neural Tax Engine",
+    title: "Expert Tax Engine",
     description:
-      "Deep-learning models trained on 10M+ tax scenarios identify optimization vectors invisible to traditional methods.",
+      "Built on Anil Grandhi's decades of CPA expertise — our proprietary methodology identifies optimization vectors invisible to traditional methods.",
     color: "bg-[#DC5700]/20 text-[#FFB596]",
   },
   {
@@ -111,9 +111,9 @@ const demoSlides = [
   },
   {
     step: "02",
-    title: "AI Analyzes Your Situation",
-    subtitle: "Neural tax engine scans thousands of tax codes",
-    description: "Our AI cross-references your documents against the entire IRC code, state regulations, and recent tax law changes to identify every possible optimization.",
+    title: "We Analyze Your Situation",
+    subtitle: "Our engine scans thousands of tax codes",
+    description: "Your documents are cross-referenced against the entire IRC code, state regulations, and recent tax law changes to identify every possible optimization.",
     icon: Brain,
     accent: "from-[#4CD6FB] to-[#4CD6FB]/60",
     features: ["Personalized to your entity type", "Real-time tax law updates", "Multi-year trend analysis"],
@@ -131,9 +131,9 @@ const demoSlides = [
   },
   {
     step: "04",
-    title: "Chat With Your Tax AI",
+    title: "Chat With AG FinTax",
     subtitle: "Ask anything, get expert answers instantly",
-    description: "Have a natural conversation with our AI tax advisor. Ask follow-up questions, explore scenarios, and get personalized guidance — available 24/7.",
+    description: "Have a natural conversation with AG FinTax. Ask follow-up questions, explore scenarios, and get personalized guidance — available 24/7.",
     icon: MessageCircle,
     accent: "from-[#DC5700] to-[#FFB596]",
     features: ["Voice input support", "Context-aware responses", "Cites specific tax codes"],
@@ -270,7 +270,7 @@ export default function Home() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
                 </span>
-                AI Financial Protocol 2.0
+                AG FinTax Planning Platform
               </motion.div>
 
               {/* H1 */}
@@ -391,7 +391,7 @@ export default function Home() {
                   <ShieldCheck className="h-5 w-5 text-[#4CD6FB]" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[#E4E1E9]">Verified AI</p>
+                  <p className="text-sm font-bold text-[#E4E1E9]">Verified & Secure</p>
                   <p className="text-xs text-[#908F9C]">SOC 2 Compliant</p>
                 </div>
               </motion.div>
@@ -497,7 +497,7 @@ export default function Home() {
             <motion.div variants={fadeInUp} className="text-center mb-20">
               <span className="text-[10px] font-extrabold tracking-[0.3em] text-[#FFB596] uppercase mb-4 block">How the Platform Works</span>
               <h2 className="text-4xl font-extrabold tracking-tight text-[#E4E1E9] sm:text-5xl">
-                Your AI-Powered{" "}
+                Your Expert{" "}
                 <span className="bg-gradient-to-r from-[#DC5700] to-[#FFB596] bg-clip-text text-transparent">
                   Tax Command Center
                 </span>
@@ -510,7 +510,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { step: "01", icon: Upload, title: "Upload Documents", desc: "Drop W-2s, 1099s, K-1s, and financial statements. Our OCR engine extracts every data point.", accent: "from-[#DC5700] to-[#FFB596]" },
-                { step: "02", icon: Brain, title: "AI Analysis", desc: "Neural tax engine scans thousands of IRC codes, identifies deductions, and classifies every document.", accent: "from-[#4CD6FB] to-[#4CD6FB]/50" },
+                { step: "02", icon: Brain, title: "Expert Analysis", desc: "AG FinTax's engine scans thousands of IRC codes, identifies deductions, and classifies every document.", accent: "from-[#4CD6FB] to-[#4CD6FB]/50" },
                 { step: "03", icon: Zap, title: "Strategy Generation", desc: "Personalized tax strategies ranked by savings potential, risk level, and implementation complexity.", accent: "from-[#BFC2FF] to-[#BFC2FF]/50" },
                 { step: "04", icon: TrendingUp, title: "Maximize Savings", desc: "Real-time dashboard tracks projected vs. actual savings. Continuous optimization throughout the year.", accent: "from-[#DC5700] to-[#FFB596]" },
               ].map((item) => (
@@ -562,7 +562,7 @@ export default function Home() {
                 </span>
               </h2>
               <p className="mt-4 text-lg text-[#C7C5D3] max-w-xl mx-auto">
-                Every plan includes AI-powered tax intelligence. Choose the tier that matches your financial complexity.
+                Every plan includes AG FinTax&apos;s expert tax intelligence. Choose the tier that matches your financial complexity.
               </p>
             </motion.div>
 
@@ -572,8 +572,8 @@ export default function Home() {
                   name: "Starter",
                   price: "Free",
                   period: "forever",
-                  desc: "For individuals exploring AI tax planning",
-                  features: ["5 AI chat questions/month", "Basic document upload (3 docs)", "2 tax strategies", "Email support"],
+                  desc: "For individuals exploring tax planning",
+                  features: ["5 chat questions/month", "Basic document upload (3 docs)", "2 tax strategies", "Email support"],
                   cta: "Get Started Free",
                   featured: false,
                 },
@@ -582,7 +582,7 @@ export default function Home() {
                   price: "$49",
                   period: "/month",
                   desc: "For business owners and high-income earners",
-                  features: ["Unlimited AI chat", "Unlimited document uploads", "All 46+ tax strategies", "AI tax return review", "Savings dashboard & charts", "Priority support", "Export reports (PDF/CSV)"],
+                  features: ["Unlimited expert chat", "Unlimited document uploads", "All 46+ tax strategies", "Tax return review", "Savings dashboard & charts", "Priority support", "Export reports (PDF/CSV)"],
                   cta: "Start Free Trial",
                   featured: true,
                 },
@@ -591,7 +591,7 @@ export default function Home() {
                   price: "Custom",
                   period: "contact us",
                   desc: "For CPA firms and multi-entity structures",
-                  features: ["Everything in Professional", "Multi-entity management", "Custom AI model training", "API access", "Dedicated tax architect", "White-label options", "SOC 2 compliance reports"],
+                  features: ["Everything in Professional", "Multi-entity management", "Custom strategy models", "API access", "Dedicated tax architect", "White-label options", "SOC 2 compliance reports"],
                   cta: "Contact Sales",
                   featured: false,
                 },
@@ -680,7 +680,7 @@ export default function Home() {
               </h2>
               <p className="mx-auto mt-6 max-w-xl text-lg text-[#C7C5D3]">
                 Join 15,000+ entities that have transformed their financial
-                architecture with AI-driven precision.
+                architecture with AG FinTax&apos;s expert precision.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
@@ -714,8 +714,8 @@ export default function Home() {
                 </span>
               </Link>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#908F9C]">
-                The Financial Architect. AI-powered tax optimization and
-                liquidity modeling engineered for precision.
+                The Financial Architect. Expert tax optimization and
+                planning engineered for precision by Anil Grandhi, CPA.
               </p>
             </div>
 
@@ -765,7 +765,7 @@ export default function Home() {
                 Stay Updated
               </h4>
               <p className="mb-4 text-sm text-[#908F9C]">
-                Get the latest insights on AI-driven financial strategies.
+                Get the latest insights on tax planning strategies.
               </p>
               <div className="flex gap-2">
                 <input
@@ -972,7 +972,7 @@ function DemoMockUI({ slide }: { slide: string }) {
       <div className={mockStyles}>
         <div className="flex items-center gap-2 mb-4">
           <Brain className="h-4 w-4 text-[#4CD6FB]" />
-          <span className="text-xs font-bold text-[#E4E1E9]">AI Analysis</span>
+          <span className="text-xs font-bold text-[#E4E1E9]">Expert Analysis</span>
         </div>
         <div className="space-y-3">
           {[
@@ -1082,7 +1082,7 @@ function DemoMockUI({ slide }: { slide: string }) {
 function QuickChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
-    { role: "assistant", content: "Hi! I'm the AgFinTax assistant. I can answer questions about our platform, pricing, features, and how AI-powered tax planning works. What would you like to know?" },
+    { role: "assistant", content: "Hi! I'm the AG FinTax assistant. I can answer questions about our platform, pricing, features, and how Anil Grandhi's tax planning methodology works. What would you like to know?" },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -1090,7 +1090,7 @@ function QuickChatBot() {
 
   const quickQuestions = [
     "What does AgFinTax do?",
-    "How does AI tax planning work?",
+    "How does AG tax planning work?",
     "What documents can I upload?",
     "Is my data secure?",
   ];
@@ -1112,7 +1112,7 @@ function QuickChatBot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: "You are a helpful assistant for AgFinTax, an AI-powered tax planning platform by AG FinTax (Anil Grandhi's firm). Answer questions about the platform's features: AI tax chat, document intelligence (OCR for W-2s, 1099s, K-1s), 15+ tax strategies (QBI, S-Corp, cost segregation, R&D credits, etc.), savings dashboard with charts, automated tax return review with red/green flags, and client profile management. Pricing: Free tier (5 questions/month, 3 docs), Professional $49/mo (unlimited everything), Enterprise (custom). The platform uses Azure Document Intelligence for OCR and AI models via OpenRouter. Data is encrypted (AES-256), SOC 2 compliant. Located in Texas and Washington. Contact: hello@agfintax.com, (425) 395-4318. Keep answers concise (2-3 sentences max). Be friendly and professional." },
+            { role: "system", content: "You are a helpful assistant for AG FinTax, Anil Grandhi's tax planning firm. NEVER mention AI, LLM, or machine learning — present everything as AG FinTax's proprietary expertise and methodology. Answer questions about the platform's features: expert tax chat, document intelligence (OCR for W-2s, 1099s, K-1s), 46+ tax strategies (QBI, S-Corp, cost segregation, R&D credits, etc.), savings dashboard with charts, tax return review with red/green flags, and client profile management. Pricing: Free tier (5 questions/month, 3 docs), Professional $49/mo (unlimited everything), Enterprise (custom). Data is encrypted (AES-256), SOC 2 compliant. Located in Texas and Washington. Contact: hello@agfintax.com, (425) 395-4318. Keep answers concise (2-3 sentences max). Be friendly and professional." },
             ...messages.slice(-6).map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: message },
           ],
@@ -1143,7 +1143,7 @@ function QuickChatBot() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "AgFinTax is an AI-powered tax planning platform that helps you upload documents, get personalized tax strategies, and maximize savings. Sign up free to explore! For questions, contact hello@agfintax.com or call (425) 395-4318." },
+        { role: "assistant", content: "AG FinTax is a tax planning platform built on Anil Grandhi's decades of CPA expertise. Upload your documents, get personalized tax strategies, and maximize savings. Sign up free to explore! For questions, contact hello@agfintax.com or call (425) 395-4318." },
       ]);
     } finally {
       setIsLoading(false);
@@ -1169,7 +1169,7 @@ function QuickChatBot() {
                 <Brain className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">AgFinTax AI</p>
+                <p className="text-sm font-bold text-white">AG FinTax</p>
                 <p className="text-[10px] text-white/70 font-medium">Ask anything about our platform</p>
               </div>
             </div>

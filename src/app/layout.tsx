@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AgFinTax | The Financial Architect",
-  description: "AI-powered financial architecture for high-net-worth entities. Automated tax strategies, document intelligence, and liquidity modeling with mathematical certainty.",
+  description: "Expert financial architecture by Anil Grandhi, CPA. Tax strategies, document intelligence, and planning built on decades of professional experience.",
 };
 
 export default function RootLayout({

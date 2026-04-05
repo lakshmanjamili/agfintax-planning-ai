@@ -8,8 +8,8 @@ export function getOpenRouterClient() {
 }
 
 export const MODELS = {
-  chat: "anthropic/claude-sonnet-4",
-  extraction: "anthropic/claude-sonnet-4",
-  classification: "openai/gpt-4o",
+  chat: "openai/gpt-5.4",
+  extraction: "openai/gpt-5.4",
+  classification: "openai/gpt-5.4",
   review: "anthropic/claude-sonnet-4",
 } as const;

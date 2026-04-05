@@ -542,7 +542,7 @@ const DOCS_KEY = "agfintax_documents";
 const ENTITY_KEY = "agfintax_entity_type";
 
 /** Max plans allowed on free tier */
-export const FREE_PLAN_LIMIT = 5;
+export const FREE_PLAN_LIMIT = 10;
 
 // ---------------------------------------------------------------------------
 // Client Profile persistence

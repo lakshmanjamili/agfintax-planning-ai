@@ -18,11 +18,11 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   },
   "/dashboard/smart-plan": {
     title: "Smart Plan",
-    subtitle: "AI-powered personalized tax planning",
+    subtitle: "Personalized tax planning by AG FinTax",
   },
   "/dashboard/tax-chat": {
-    title: "Tax Chat",
-    subtitle: "AI-powered tax conversations",
+    title: "Ask AG",
+    subtitle: "Expert tax conversations",
   },
   "/dashboard/documents": {
     title: "Documents",
@@ -38,7 +38,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   },
   "/dashboard/tax-review": {
     title: "Review",
-    subtitle: "AI-powered tax review",
+    subtitle: "Expert tax review",
   },
   "/dashboard/profile": {
     title: "Profile",

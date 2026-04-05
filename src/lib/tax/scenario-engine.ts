@@ -1201,6 +1201,47 @@ export function generateAllScenarios(
   });
 }
 
+// ---------------------------------------------------------------------------
+// Demo scenarios — used when no profile/plan exists so the page isn't empty
+// Uses a sample $150K individual profile so users can see the feature
+// ---------------------------------------------------------------------------
+export function generateDemoScenarios(): ScenarioResult[] {
+  const demoProfile: ClientProfile = {
+    entityType: "individual",
+    occupation: "Software Engineer",
+    filingStatus: "single",
+    annualIncome: "$150,000",
+    incomeSources: ["W-2", "Self-Employment"],
+    dependents: 0,
+    state: "Texas",
+    businessType: "sole_prop",
+    businessName: "Demo Consulting LLC",
+    businessIncome: "$65,000",
+    numberOfEmployees: "1",
+    yearEstablished: "2022",
+    hasRealEstate: true,
+    hasBusinessIncome: true,
+    hasInternational: false,
+    hasMortgage: true,
+    hasRetirementAccounts: true,
+    retirementAccountTypes: ["401k", "Roth IRA"],
+    hasInvestments: true,
+    hasHealthInsurance: true,
+    hasStudentLoans: false,
+    hasCharitableGiving: true,
+    savingsTarget: "$10,000",
+    planningPriorities: ["Minimize Tax", "Maximize Deductions"],
+    ocrSummary: "",
+    ocrExtractedFields: {},
+    uploadedDocuments: [],
+    comprehensiveSummary: "",
+    completeness: 60,
+    lastUpdated: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+  return generateAllScenarios(demoProfile, null);
+}
+
 // Re-export
 export { formatUSD, formatPercent };
 

@@ -17,9 +17,8 @@ export async function POST(req: Request) {
     }
 
     const models = [
+      "openai/gpt-5.4",
       "anthropic/claude-sonnet-4",
-      "anthropic/claude-3.5-sonnet",
-      "openai/gpt-4o-mini",
     ];
 
     let lastError = "";

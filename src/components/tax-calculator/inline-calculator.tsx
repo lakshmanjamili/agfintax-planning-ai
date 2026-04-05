@@ -226,7 +226,7 @@ body{font-family:'Inter',sans-serif;background:#f4f4f5;color:#1a1a1a}
 
     <div class="cta-box">
       <h3>Save ${formatUSD(Math.max(5000, insights?.estimatedAdditionalSavings ?? result.totalTax * 0.15))}+ More With a Smart Plan</h3>
-      <p>${insights?.ctaMessage ?? "Our AI analyzes 46+ tax strategies personalized to your exact situation. Business owners typically save 15-40% on their taxes."}</p>
+      <p>${insights?.ctaMessage ?? "AG FinTax analyzes 46+ tax strategies personalized to your exact situation. Business owners typically save 15-40% on their taxes."}</p>
       <a href="https://agfintax.com/dashboard/smart-plan">Get My Personalized Smart Plan →</a>
       <div style="font-size:11px;color:#999;margin-top:10px">Free account · Takes 5 minutes · No credit card</div>
     </div>
@@ -236,9 +236,9 @@ body{font-family:'Inter',sans-serif;background:#f4f4f5;color:#1a1a1a}
     <p style="margin-bottom:8px"><strong>Disclaimers:</strong></p>
     <p style="margin-bottom:6px">* This tax estimator provides approximate federal income tax calculations based on 2025 tax brackets and standard IRS rules. Results are for educational and informational purposes only and should not be considered tax advice.</p>
     <p style="margin-bottom:6px">** Estimated refund or tax owed is based solely on the information provided. Actual results may vary based on additional income sources, credits, deductions, state/local taxes, AMT, NIIT, and other factors not captured by this calculator.</p>
-    <p style="margin-bottom:6px">*** Potential savings estimates are AI-generated and represent hypothetical scenarios. Individual results will vary. Savings are not guaranteed and depend on your specific financial circumstances and eligibility.</p>
+    <p style="margin-bottom:6px">*** Potential savings estimates represent hypothetical scenarios based on AG FinTax's methodology. Individual results will vary. Savings are not guaranteed and depend on your specific financial circumstances and eligibility.</p>
     <p style="margin-bottom:6px">**** Savings percentages are based on historical client data and may not be representative of all outcomes. Past results do not guarantee future performance.</p>
-    <p style="margin-top:12px;padding-top:8px;border-top:1px solid #eee"><strong>Terms & Conditions:</strong> By using this calculator, you acknowledge that (1) AG FinTax provides this tool "as is" without warranty; (2) no CPA-client or attorney-client relationship is established; (3) you should consult a qualified tax professional before making tax decisions; (4) AG FinTax is not responsible for errors or actions taken based on these results; (5) AI insights are powered by third-party models and may contain inaccuracies. This calculator covers federal income tax only. Tax laws change frequently. For comprehensive planning, contact AG FinTax.</p>
+    <p style="margin-top:12px;padding-top:8px;border-top:1px solid #eee"><strong>Terms & Conditions:</strong> By using this calculator, you acknowledge that (1) AG FinTax provides this tool "as is" without warranty; (2) no CPA-client or attorney-client relationship is established; (3) you should consult a qualified tax professional before making tax decisions; (4) AG FinTax is not responsible for errors or actions taken based on these results; (5) insights are generated programmatically and may contain inaccuracies. This calculator covers federal income tax only. Tax laws change frequently. For comprehensive planning, contact AG FinTax.</p>
   </div>
   <div class="footer">
     <strong>AG FinTax</strong> — Financial & Tax Services for the Dynamic Business Owner<br/>
@@ -395,7 +395,7 @@ export default function InlineTaxCalculator() {
             Instantly
           </h2>
           <p className="mt-4 text-lg text-[#C7C5D3] max-w-2xl mx-auto">
-            Enter your details, get your estimated refund or tax bill, and let our AI uncover savings opportunities you might be missing.*
+            Enter your details, get your estimated refund or tax bill, and let AG FinTax uncover savings opportunities you might be missing.*
           </p>
         </motion.div>
 
@@ -664,7 +664,7 @@ export default function InlineTaxCalculator() {
             <div className="space-y-2.5 text-[10px] leading-relaxed text-[#C7C5D3]/35">
               <p>* This tax estimator provides approximate federal income tax calculations based on 2025 tax brackets and standard IRS rules. Results are for educational and informational purposes only and should not be considered tax advice, legal advice, or a guarantee of your actual tax liability.</p>
               <p>** Estimated refund or tax owed is based solely on the information you provide. Actual results may vary based on additional income sources, credits, deductions, state and local taxes, Alternative Minimum Tax (AMT), Net Investment Income Tax (NIIT), and other factors not captured by this calculator.</p>
-              <p>*** Potential savings estimates are generated by AI and represent hypothetical scenarios based on general tax strategies. Individual results will vary. Savings are not guaranteed and depend on your specific financial circumstances, eligibility, and proper implementation of tax strategies.</p>
+              <p>*** Potential savings estimates represent hypothetical scenarios based on general tax strategies. Individual results will vary. Savings are not guaranteed and depend on your specific financial circumstances, eligibility, and proper implementation of tax strategies.</p>
               <p>**** Savings percentages cited are based on historical client data and may not be representative of all outcomes. Past performance or savings achieved by other clients do not guarantee future results.</p>
             </div>
             <div className="mt-6 pt-4 border-t border-white/5 text-[9px] text-[#C7C5D3]/25 space-y-2">

@@ -76,7 +76,7 @@ Respond with a JSON object (no markdown, no code fences, just raw JSON):
           "X-Title": "AgFinTax Tax Calculator",
         },
         body: JSON.stringify({
-          model: "openai/gpt-4o-mini",
+          model: "openai/gpt-5.4",
           temperature: 0.3,
           max_tokens: 1000,
           messages: [{ role: "user", content: prompt }],

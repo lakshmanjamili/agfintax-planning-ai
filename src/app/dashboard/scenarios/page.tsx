@@ -40,6 +40,7 @@ import {
 } from "recharts";
 import {
   generateAllScenarios,
+  generateDemoScenarios,
   saveScenarios,
   formatUSD,
   type ScenarioResult,
@@ -238,14 +239,23 @@ function ScenariosContent() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     const profile = getClientProfile();
     const plan = getPlan();
-    const results = generateAllScenarios(profile, plan);
+    let results = generateAllScenarios(profile, plan);
+
+    // If no real data, show demo scenarios so the page isn't empty
+    if (results.length === 0) {
+      results = generateDemoScenarios();
+      setIsDemo(true);
+    } else {
+      saveScenarios(results);
+    }
+
     setScenarios(results);
     if (results.length > 0) {
-      saveScenarios(results);
       setExpanded(results[0].id);
     }
     setLoading(false);
@@ -266,24 +276,33 @@ function ScenariosContent() {
     );
   }
 
-  if (scenarios.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#0D0D10] flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <Zap className="w-10 h-10 text-[#C7C5D3]/30 mx-auto mb-4" />
-          <h2 className="text-lg font-bold text-[#E4E1E9] mb-2">No Scenarios Available Yet</h2>
-          <p className="text-sm text-[#C7C5D3] mb-6">Generate a Smart Plan first so we can build personalized What-If comparisons from your tax profile and uploaded documents.</p>
-          <Link href="/dashboard/smart-plan" className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#DC5700] to-[#FFB596] text-white rounded-xl text-sm font-bold">
-            <Sparkles className="w-4 h-4" /> Go to Smart Plan
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#0D0D10] overflow-y-auto">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Demo mode banner */}
+        {isDemo && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-2xl bg-gradient-to-r from-[#DC5700]/15 to-[#FFB596]/10 border border-[#DC5700]/20 px-5 py-4 flex items-center justify-between gap-4 flex-wrap"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DC5700]/20">
+                <Sparkles className="w-5 h-5 text-[#FFB596]" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[#E4E1E9]">Demo Mode — Sample Scenarios</p>
+                <p className="text-xs text-[#C7C5D3]">These use a sample $150K profile. Generate a Smart Plan to see scenarios personalized to your real tax situation.</p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/smart-plan"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#DC5700] to-[#FFB596] text-white rounded-xl text-sm font-bold shrink-0 shadow-lg shadow-[#DC5700]/20 hover:shadow-[#DC5700]/30 transition-all"
+            >
+              <Sparkles className="w-4 h-4" /> Create My Plan
+            </Link>
+          </motion.div>
+        )}
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-center justify-between">

@@ -18,8 +18,6 @@ import {
   Target,
   AlertCircle,
   Download,
-  DollarSign,
-  Shield,
   Users,
   Briefcase,
   Landmark,
@@ -72,9 +70,8 @@ const ENTITY_DASHBOARD_CONFIG: Record<
     ],
     quickActions: [
       { label: "Build Profile", href: "/dashboard/profile", icon: User, desc: "Upload docs & build profile" },
-      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "AI builds your tax plan" },
-      { label: "View Strategies", href: "/dashboard/strategies", icon: TrendingUp, desc: "Review your strategies" },
-      { label: "AI Tax Chat", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about deductions & credits" },
+      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "AG's expert tax plan" },
+      { label: "Ask AG", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about deductions & credits" },
     ],
     tagline: "Individual Tax Planning (Form 1040)",
     savingsLabel: "Deduction & Credit Savings",
@@ -92,9 +89,8 @@ const ENTITY_DASHBOARD_CONFIG: Record<
     ],
     quickActions: [
       { label: "Build Profile", href: "/dashboard/profile", icon: Building2, desc: "Upload 1120-S, K-1, W-2" },
-      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "AI builds your S-Corp plan" },
-      { label: "View Strategies", href: "/dashboard/strategies", icon: DollarSign, desc: "Salary vs distribution" },
-      { label: "AI Tax Chat", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about S-Corp strategies" },
+      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "Expert S-Corp plan" },
+      { label: "Ask AG", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about S-Corp strategies" },
     ],
     tagline: "S-Corporation Planning (Form 1120-S)",
     savingsLabel: "Payroll & Entity Savings",
@@ -112,9 +108,8 @@ const ENTITY_DASHBOARD_CONFIG: Record<
     ],
     quickActions: [
       { label: "Build Profile", href: "/dashboard/profile", icon: Landmark, desc: "Upload Form 1120, returns" },
-      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "AI builds your C-Corp plan" },
-      { label: "QSBS Analysis", href: "/dashboard/strategies", icon: Shield, desc: "Evaluate gain exclusion" },
-      { label: "AI Tax Chat", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about C-Corp strategies" },
+      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "Expert C-Corp plan" },
+      { label: "Ask AG", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about C-Corp strategies" },
     ],
     tagline: "C-Corporation Planning (Form 1120)",
     savingsLabel: "Corporate Tax Savings",
@@ -132,9 +127,8 @@ const ENTITY_DASHBOARD_CONFIG: Record<
     ],
     quickActions: [
       { label: "Build Profile", href: "/dashboard/profile", icon: Users, desc: "Upload 1065, K-1 forms" },
-      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "AI builds your plan" },
-      { label: "Allocation Review", href: "/dashboard/strategies", icon: Users, desc: "Review partner allocations" },
-      { label: "AI Tax Chat", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about partnership strategies" },
+      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "Expert tax plan" },
+      { label: "Ask AG", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about partnership strategies" },
     ],
     tagline: "Partnership Planning (Form 1065)",
     savingsLabel: "Partner-Level Savings",
@@ -152,9 +146,8 @@ const ENTITY_DASHBOARD_CONFIG: Record<
     ],
     quickActions: [
       { label: "Build Profile", href: "/dashboard/profile", icon: Briefcase, desc: "Upload Schedule C, 1099s" },
-      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "AI builds your plan" },
-      { label: "Entity Evaluation", href: "/dashboard/strategies", icon: Building2, desc: "Should you elect S-Corp?" },
-      { label: "AI Tax Chat", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about sole prop strategies" },
+      { label: "Smart Plan", href: "/dashboard/smart-plan", icon: Sparkles, desc: "Expert tax plan" },
+      { label: "Ask AG", href: "/dashboard/tax-chat", icon: Brain, desc: "Ask about sole prop strategies" },
     ],
     tagline: "Sole Proprietorship Planning (Schedule C)",
     savingsLabel: "Business Deduction Savings",
@@ -300,7 +293,7 @@ async function generateStrategyPDF(plan: SavedPlan, entityType: EntityType, user
   doc.text("AG FinTax", 14, 20);
   doc.setFontSize(10);
   doc.setTextColor(220, 87, 0);
-  doc.text("AI Financial Architect", 14, 28);
+  doc.text("Tax Planning Experts", 14, 28);
   doc.setFontSize(10);
   doc.setTextColor(180, 180, 180);
   doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, 140, 20);
@@ -331,7 +324,7 @@ async function generateStrategyPDF(plan: SavedPlan, entityType: EntityType, user
   doc.setFontSize(10);
   doc.setTextColor(180, 180, 180);
   doc.text(`${plan.strategies.length} strategies across ${new Set(plan.strategies.map((s) => s.category)).size} categories`, 100, y + 12);
-  doc.text(`Est. Tax Savings: $${Math.round(plan.totalSavings * 0.32).toLocaleString()} (at ~32% rate)`, 100, y + 24);
+  doc.text(`${plan.strategies.length} strategies across ${new Set(plan.strategies.map((s) => s.category)).size} categories`, 100, y + 24);
   y += 40;
 
   // Strategy table
@@ -462,9 +455,9 @@ export default function DashboardPage() {
 
   // Onboarding progress — clear linear flow
   const onboardingSteps = [
-    { id: "profile", label: "Build Profile & Upload Docs", done: hasProfile, href: "/dashboard/profile", description: hasProfile ? `${profileCompleteness}% complete${docCount > 0 ? ` · ${docCount} docs analyzed` : ""}` : "Upload tax returns, W-2s, 1099s — AI builds your profile" },
-    { id: "plan", label: "Generate Smart Plan", done: hasPlan, href: "/dashboard/smart-plan", description: hasPlan ? `${strategyCount} strategies · $${totalSavings.toLocaleString()} in savings` : "AI analyzes your profile and builds a personalized tax plan" },
-    { id: "review", label: "Review Strategies", done: hasPlan && strategyCount > 0, href: "/dashboard/strategies", description: hasPlan ? "Review, customize, and prioritize your strategies" : "Complete Smart Plan first" },
+    { id: "profile", label: "Build Profile & Upload Docs", done: hasProfile, href: "/dashboard/profile", description: hasProfile ? `${profileCompleteness}% complete${docCount > 0 ? ` · ${docCount} docs analyzed` : ""}` : "Upload tax returns, W-2s, 1099s — we build your profile" },
+    { id: "plan", label: "Generate Smart Plan", done: hasPlan, href: "/dashboard/smart-plan", description: hasPlan ? `${strategyCount} strategies · $${totalSavings.toLocaleString()} in savings` : "Anil Grandhi's methodology builds your personalized tax plan" },
+    { id: "review", label: "Review Strategies", done: hasPlan && strategyCount > 0, href: "/dashboard/smart-plan", description: hasPlan ? "Review, customize, and prioritize your strategies" : "Complete Smart Plan first" },
     { id: "download", label: "Download Report", done: hasPlan && strategyCount > 0, href: "/dashboard", description: hasPlan ? "Download your strategy PDF report" : "Generate your plan first" },
   ];
   const completedSteps = onboardingSteps.filter((s) => s.done).length;
@@ -573,18 +566,18 @@ export default function DashboardPage() {
             </div>
           </GlassPanel>
 
-          {/* Est. Tax Savings */}
+          {/* Savings Range */}
           <GlassPanel accentColor={accentColor}>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Est. Tax Savings
+                  Savings Range
                 </p>
                 <p className="mt-2 text-xl font-bold text-emerald-400">
-                  ${Math.round(totalSavings * 0.32).toLocaleString()}
+                  ${(plan?.strategies.reduce((s, st) => s + (st.savingsMin || 0), 0) || 0).toLocaleString()}–${(plan?.strategies.reduce((s, st) => s + (st.savingsMax || 0), 0) || 0).toLocaleString()}
                 </p>
                 <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                  at ~32% effective rate
+                  Based on your profile
                 </span>
               </div>
               <div className="rounded-xl bg-emerald-500/10 p-3">
@@ -756,8 +749,8 @@ export default function DashboardPage() {
                   </h3>
                   <p className="mt-1 text-sm text-slate-400">
                     {entityInfo
-                      ? `AI-powered ${entityInfo.formNumber} tax planning — strategies tailored to your ${entityInfo.label.toLowerCase()}.`
-                      : "Select your entity type, answer a few questions, and AI builds your personalized tax plan."}
+                      ? `Expert ${entityInfo.formNumber} tax planning — strategies tailored to your ${entityInfo.label.toLowerCase()}.`
+                      : "Select your entity type, answer a few questions, and we build your personalized tax plan."}
                   </p>
                 </div>
                 {entityInfo && (
@@ -861,8 +854,8 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-white mb-4">How It Works</h3>
             <div className="grid gap-3 sm:grid-cols-4">
               {[
-                { step: "1", label: "Build Profile", desc: "Upload tax returns, W-2s, 1099s — AI extracts your data", href: "/dashboard/profile", icon: User },
-                { step: "2", label: "Smart Plan", desc: "AI analyzes your profile and builds personalized strategies", href: "/dashboard/smart-plan", icon: Sparkles },
+                { step: "1", label: "Build Profile", desc: "Upload tax returns, W-2s, 1099s — we extract your data", href: "/dashboard/profile", icon: User },
+                { step: "2", label: "Smart Plan", desc: "AG's methodology analyzes your profile and builds strategies", href: "/dashboard/smart-plan", icon: Sparkles },
                 { step: "3", label: "Review", desc: "Review strategies, estimated savings, and recommendations", href: "/dashboard/strategies", icon: TrendingUp },
                 { step: "4", label: "Download", desc: "Download your strategy report PDF to share with your CPA", href: "/dashboard", icon: Download },
               ].map((item) => (
@@ -945,7 +938,7 @@ export default function DashboardPage() {
               </Link>
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/50">
                 Financial &amp; Tax Services for the Dynamic Business Owners.
-                AI-powered tax planning and optimization.
+                Expert tax planning and optimization.
               </p>
             </div>
 

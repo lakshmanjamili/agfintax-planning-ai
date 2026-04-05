@@ -285,7 +285,7 @@ export default function TaxChatPage() {
                 <Zap className="h-3 w-3 text-[#4CD6FB]" />
               </div>
               <span className="hidden text-xs font-medium text-[#C7C5D3] sm:inline">
-                GPT-4 Fiscal Engine
+                AG FinTax Engine
               </span>
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function TaxChatPage() {
                 {/* Heading */}
                 <div className="text-center">
                   <h2 className="mesh-gradient-text text-5xl font-extrabold leading-tight">
-                    Ask AgFinTax AI
+                    Ask AG FinTax
                   </h2>
                   <p className="mt-4 text-sm leading-relaxed text-[#C7C5D3]">
                     Your architectural blueprint for tax optimization. Ask any
@@ -408,7 +408,7 @@ export default function TaxChatPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Message AgFinTax AI..."
+                  placeholder="Ask AG FinTax a question..."
                   className="min-h-[40px] max-h-32 flex-1 resize-none border-0 bg-transparent text-sm text-[#E4E1E9] placeholder:text-[#C7C5D3]/50 focus-visible:ring-0 focus-visible:ring-offset-0"
                   rows={1}
                   disabled={isLoading}
@@ -437,7 +437,7 @@ export default function TaxChatPage() {
 
               {/* Disclaimer */}
               <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-wider text-[#C7C5D3]/40">
-                AgFinTax AI may provide information that requires professional
+                AG FinTax may provide information that requires professional
                 CPA validation.
               </p>
             </div>

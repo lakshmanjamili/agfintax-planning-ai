@@ -202,7 +202,7 @@ function generateReport(input: TaxInput, result: TaxResult, age: number) {
 
   <div class="cta">
     <h3>Want a Personalized Tax Savings Plan?</h3>
-    <p>Our AI-powered Smart Plan identifies strategies that could save you thousands. See exactly how much you could keep.</p>
+    <p>Our Smart Plan identifies strategies that could save you thousands. See exactly how much you could keep.</p>
     <a href="https://agfintax.com/dashboard/smart-plan">Get My Smart Plan →</a>
   </div>
 
@@ -640,7 +640,7 @@ export default function TaxCalculatorPage() {
                     Want to save {formatUSD(Math.max(5000, result.totalTax * 0.15))}+ more?
                   </h3>
                   <p className="text-sm text-[#C7C5D3] mb-4 max-w-md mx-auto">
-                    Our AI-powered Smart Plan identifies personalized tax strategies based on your unique situation. Business owners typically save 15-40% on their taxes.
+                    AG FinTax's Smart Plan identifies personalized tax strategies based on your unique situation. Business owners typically save 15-40% on their taxes.
                   </p>
                   <Link
                     href="/dashboard/smart-plan"
