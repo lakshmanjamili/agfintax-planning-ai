@@ -298,7 +298,7 @@ export default function ProfilePage() {
 
     try {
       // Process each file sequentially, merging results into profile progressively
-      let currentProfile = { ...profile };
+      const currentProfile = { ...profile };
       const allSuggestions: string[] = [];
 
       for (let i = 0; i < files.length; i++) {
