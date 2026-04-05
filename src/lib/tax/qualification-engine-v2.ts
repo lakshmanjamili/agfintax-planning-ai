@@ -587,22 +587,19 @@ export function getNextQuestion(
   disqualifiedIds: string[],
   answers: Record<string, string>
 ): { strategy: StrategyQualification; question: QualificationQuestion; questionIndex: number; totalQuestions: number; strategyIndex: number; totalStrategies: number } | null {
-  // Include both unresolved AND qualified strategies — we want ALL questions answered.
-  // Only exclude disqualified strategies (they failed a hard gate, no point asking more).
+  // Only exclude disqualified strategies (they failed a hard gate).
   const active = candidates.filter(
     s => !disqualifiedIds.includes(s.id)
   );
 
   if (active.length === 0) return null;
 
-  // Sort: unresolved strategies first, then qualified.
-  // Within each group, sort by "readiness" — strategies with fewer unanswered questions first
-  // (they're already partially pre-filled = more relevant). Break ties by savings potential.
+  // Sort: unresolved strategies first (by readiness + savings), then qualified.
   const sortByReadiness = (a: StrategyQualification, b: StrategyQualification) => {
     const aRemaining = a.qualificationQuestions.filter(q => !isQuestionAnsweredByTopic(q.id, answers)).length;
     const bRemaining = b.qualificationQuestions.filter(q => !isQuestionAnsweredByTopic(q.id, answers)).length;
-    if (aRemaining !== bRemaining) return aRemaining - bRemaining; // fewer questions first
-    return b.typicalSavingsRange.max - a.typicalSavingsRange.max; // tie-break by savings
+    if (aRemaining !== bRemaining) return aRemaining - bRemaining;
+    return b.typicalSavingsRange.max - a.typicalSavingsRange.max;
   };
   const unresolved = active.filter(s => !qualifiedIds.includes(s.id)).sort(sortByReadiness);
   const qualified = active.filter(s => qualifiedIds.includes(s.id)).sort(sortByReadiness);
@@ -610,47 +607,79 @@ export function getNextQuestion(
 
   const totalActive = sorted.length;
 
-  // STRATEGY-BY-STRATEGY: Finish ALL questions for one strategy before moving to next.
-  // Within each strategy: gate questions first, then required, then optional/amounts.
+  // ── PASS 1: Gate questions across ALL strategies (fastest to eliminate) ──
   for (let si = 0; si < sorted.length; si++) {
     const strategy = sorted[si];
     const result = evaluateStrategy(strategy, answers);
-    if (!result.qualified && result.disqualifiedBy) continue; // Disqualified by a gate
+    if (!result.qualified && result.disqualifiedBy) continue;
 
-    // Count total unanswered questions for this strategy (for progress display)
     const allUnanswered = strategy.qualificationQuestions.filter(
       q => !isQuestionAnsweredByTopic(q.id, answers)
     );
-    if (allUnanswered.length === 0) continue; // Strategy fully interviewed
+    if (allUnanswered.length === 0) continue;
 
     const totalQs = strategy.qualificationQuestions.length;
     const answeredQs = totalQs - allUnanswered.length;
 
-    // Pass 1: Gate questions (disqualifyOn) — can eliminate this strategy
     for (const q of strategy.qualificationQuestions) {
       if (!q.disqualifyOn || !q.required) continue;
       if (isQuestionAnsweredByTopic(q.id, answers)) continue;
       return { strategy, question: q, questionIndex: answeredQs + 1, totalQuestions: totalQs, strategyIndex: si + 1, totalStrategies: totalActive };
     }
+  }
 
-    // Pass 2: Remaining required questions — needed for accurate data
+  // ── PASS 2: Required non-gate questions for UNRESOLVED strategies only ──
+  for (let si = 0; si < unresolved.length; si++) {
+    const strategy = unresolved[si];
+    const result = evaluateStrategy(strategy, answers);
+    if (!result.qualified && result.disqualifiedBy) continue;
+
+    const allUnanswered = strategy.qualificationQuestions.filter(
+      q => !isQuestionAnsweredByTopic(q.id, answers)
+    );
+    if (allUnanswered.length === 0) continue;
+
+    const totalQs = strategy.qualificationQuestions.length;
+    const answeredQs = totalQs - allUnanswered.length;
+    const globalIdx = sorted.indexOf(strategy);
+
     for (const q of strategy.qualificationQuestions) {
       if (!q.required || q.disqualifyOn) continue;
       if (isQuestionAnsweredByTopic(q.id, answers)) continue;
-      return { strategy, question: q, questionIndex: answeredQs + 1, totalQuestions: totalQs, strategyIndex: si + 1, totalStrategies: totalActive };
-    }
-
-    // Pass 3: Optional AMOUNT questions (currency/number) — needed for accurate calculations
-    // Skip optional yes/no questions to keep the interview focused
-    for (const q of strategy.qualificationQuestions) {
-      if (q.required) continue;
-      if (q.type !== 'currency' && q.type !== 'number') continue; // Only ask amount questions
-      if (isQuestionAnsweredByTopic(q.id, answers)) continue;
-      return { strategy, question: q, questionIndex: answeredQs + 1, totalQuestions: totalQs, strategyIndex: si + 1, totalStrategies: totalActive };
+      return { strategy, question: q, questionIndex: answeredQs + 1, totalQuestions: totalQs, strategyIndex: globalIdx + 1, totalStrategies: totalActive };
     }
   }
 
-  return null; // All strategies fully interviewed
+  // ── PASS 3: Amount questions ONLY for top savings strategies (limit to 5) ──
+  // This is the key optimization — don't ask $ amounts for every strategy.
+  // Rank qualified + unresolved strategies by savings potential, only ask amounts for top ones.
+  const forAmountQuestions = [...active]
+    .filter(s => !disqualifiedIds.includes(s.id))
+    .sort((a, b) => b.typicalSavingsRange.max - a.typicalSavingsRange.max)
+    .slice(0, 5); // Only top 5 strategies get detailed amount questions
+
+  for (const strategy of forAmountQuestions) {
+    const result = evaluateStrategy(strategy, answers);
+    if (!result.qualified && result.disqualifiedBy) continue;
+
+    const allUnanswered = strategy.qualificationQuestions.filter(
+      q => !isQuestionAnsweredByTopic(q.id, answers)
+    );
+    if (allUnanswered.length === 0) continue;
+
+    const totalQs = strategy.qualificationQuestions.length;
+    const answeredQs = totalQs - allUnanswered.length;
+    const globalIdx = sorted.indexOf(strategy);
+
+    for (const q of strategy.qualificationQuestions) {
+      if (q.required) continue;
+      if (q.type !== 'currency' && q.type !== 'number') continue;
+      if (isQuestionAnsweredByTopic(q.id, answers)) continue;
+      return { strategy, question: q, questionIndex: answeredQs + 1, totalQuestions: totalQs, strategyIndex: globalIdx + 1, totalStrategies: totalActive };
+    }
+  }
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------

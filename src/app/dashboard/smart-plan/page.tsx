@@ -135,6 +135,9 @@ interface PlanResult {
     income: string;
     dependents: string;
     state: string;
+    rawIncome?: number;
+    marginalRate?: number;
+    filingStatusRaw?: string;
   };
 }
 
@@ -162,6 +165,111 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
 };
 
 /* questions are now AI-driven, not hardcoded */
+
+/* ------------------------------------------------------------------ */
+/*  Contribution-based strategy config                                 */
+/* ------------------------------------------------------------------ */
+
+interface ContributionConfig {
+  ids: string[];
+  titlePatterns: string[];
+  getMax: (p: { rawIncome: number; filingStatus: string; dependents: string }) => number;
+  label: string;
+}
+
+const CONTRIBUTION_STRATEGIES: ContributionConfig[] = [
+  {
+    ids: ['traditional-401k', 'roth-401k'],
+    titlePatterns: ['Traditional 401(k)', 'Roth 401(k)'],
+    getMax: () => 31_000, // 2025 max with catch-up
+    label: '401(k) Contribution',
+  },
+  {
+    ids: ['solo-401k'],
+    titlePatterns: ['Solo 401(k)'],
+    getMax: (p) => Math.min(70_000, 31_000 + Math.round(p.rawIncome * 0.25)),
+    label: 'Solo 401(k) Contribution',
+  },
+  {
+    ids: ['simple-401k', 'simple-ira'],
+    titlePatterns: ['SIMPLE 401(k)', 'SIMPLE IRA'],
+    getMax: () => 20_000,
+    label: 'SIMPLE Plan Contribution',
+  },
+  {
+    ids: ['health-savings-account'],
+    titlePatterns: ['Health Savings Account', 'HSA'],
+    getMax: (p) => p.filingStatus === 'married_jointly' || p.filingStatus === 'Married Filing Jointly' ? 8_750 : 4_350,
+    label: 'HSA Contribution',
+  },
+  {
+    ids: ['donor-advised-fund'],
+    titlePatterns: ['Donor-Advised Fund', 'DAF'],
+    getMax: (p) => Math.round(p.rawIncome * 0.60),
+    label: 'DAF Contribution',
+  },
+  {
+    ids: ['private-foundation'],
+    titlePatterns: ['Private Foundation'],
+    getMax: (p) => Math.round(p.rawIncome * 0.30),
+    label: 'Foundation Contribution',
+  },
+  {
+    ids: ['charitable-contribution-optimization'],
+    titlePatterns: ['Charitable Contribution'],
+    getMax: (p) => Math.round(p.rawIncome * 0.60),
+    label: 'Charitable Contribution',
+  },
+  {
+    ids: ['roth-conversion'],
+    titlePatterns: ['Roth Conversion'],
+    getMax: (p) => Math.round(p.rawIncome * 0.50),
+    label: 'Roth Conversion Amount',
+  },
+  {
+    ids: ['coverdell-esa'],
+    titlePatterns: ['Coverdell ESA'],
+    getMax: (p) => 2_000 * (parseInt(p.dependents) || 1),
+    label: 'ESA Contribution',
+  },
+  {
+    ids: ['deferred-compensation-individual'],
+    titlePatterns: ['Deferred Compensation'],
+    getMax: (p) => Math.round(p.rawIncome * 0.50),
+    label: 'Deferred Amount',
+  },
+  {
+    ids: ['self-employed-health-insurance'],
+    titlePatterns: ['Self-Employed Health Insurance'],
+    getMax: () => 30_000,
+    label: 'Health Insurance Premium',
+  },
+  {
+    ids: ['qualified-opportunity-zone'],
+    titlePatterns: ['Qualified Opportunity Zone', 'QOZ'],
+    getMax: (p) => Math.round(p.rawIncome * 0.30),
+    label: 'QOZ Investment',
+  },
+];
+
+function getContributionConfig(
+  strategy: { id?: string; title: string },
+  profile: { rawIncome?: number; filingStatus?: string; filingStatusRaw?: string; dependents?: string }
+): { isContribution: true; max: number; label: string } | { isContribution: false } {
+  for (const config of CONTRIBUTION_STRATEGIES) {
+    const matchById = strategy.id && config.ids.includes(strategy.id);
+    const matchByTitle = config.titlePatterns.some(p => strategy.title.includes(p));
+    if (matchById || matchByTitle) {
+      const max = config.getMax({
+        rawIncome: profile.rawIncome || 150_000,
+        filingStatus: profile.filingStatusRaw || profile.filingStatus || 'single',
+        dependents: profile.dependents || '0',
+      });
+      return { isContribution: true, max, label: config.label };
+    }
+  }
+  return { isContribution: false };
+}
 
 /* ------------------------------------------------------------------ */
 /*  Custom range slider CSS (injected once)                            */
@@ -591,6 +699,7 @@ export default function SmartPlanPage() {
   // Results state
   const [result, setResult] = useState<PlanResult | null>(null);
   const [sliderValues, setSliderValues] = useState<Record<number, number>>({});
+  const [contributionValues, setContributionValues] = useState<Record<number, number>>({});
   const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
 
   // Plan history & limits
@@ -764,8 +873,17 @@ export default function SmartPlanPage() {
       }
       // Initialize slider values from saved data
       const sv: Record<number, number> = {};
-      existingPlan.strategies.forEach((s, i) => { sv[i] = s.estimatedSavings; });
+      const cvInit: Record<number, number> = {};
+      existingPlan.strategies.forEach((s, i) => {
+        sv[i] = s.estimatedSavings;
+        const cc = getContributionConfig(s as Strategy, existingPlan.profile);
+        if (cc.isContribution && s.estimatedSavings > 0) {
+          const rate = (existingPlan.profile as PlanResult['profile']).marginalRate || 24;
+          cvInit[i] = Math.min(Math.round(s.estimatedSavings / (rate / 100)), cc.max);
+        }
+      });
       setSliderValues(sv);
+      setContributionValues(cvInit);
       setPhase("results");
     } else if (saved) {
       setPhase("welcome");
@@ -1588,12 +1706,19 @@ Skip to building my plan
     const incomeDisplay = incomeNum >= 1_000_000
       ? `$${(incomeNum / 1_000_000).toFixed(1)}M`
       : `$${(incomeNum / 1_000).toFixed(0)}K`;
+
+    // ── Compute marginal rate early so displayProfile can reference it ──
+    const marginalRate = profile ? getMarginalRate(profile.annualIncome, profile.filingStatus) : 24;
+
     const displayProfile = {
       occupation: "Professional",
       filingStatus: filingLabel,
       income: incomeDisplay,
       dependents: String(dependents),
       state,
+      rawIncome: incomeNum,
+      marginalRate,
+      filingStatusRaw: filingStatus,
     };
 
     // ── STEP 1: Calculate savings deterministically from qualification answers ──
@@ -1602,7 +1727,6 @@ Skip to building my plan
     const calculatedSavingsMap = profile
       ? calculateAllSavings(qualStrategyIds, qualAnswers, profile)
       : new Map<string, ReturnType<typeof calculateAllSavings> extends Map<string, infer V> ? V : never>();
-    const marginalRate = profile ? getMarginalRate(profile.annualIncome, profile.filingStatus) : 24;
 
     console.log("=== CALCULATED SAVINGS (Math-Based) ===");
     calculatedSavingsMap.forEach((calc, id) => {
@@ -1722,10 +1846,17 @@ Skip to building my plan
       setPlanHistory(getPlanHistory());
 
       const sv: Record<number, number> = {};
+      const cv: Record<number, number> = {};
       sortedStrategies.forEach((s: Strategy, i: number) => {
         sv[i] = s.estimatedSavings;
+        const cc = getContributionConfig(s, planResult.profile);
+        if (cc.isContribution && s.estimatedSavings > 0) {
+          const rate = marginalRate || 24;
+          cv[i] = Math.min(Math.round(s.estimatedSavings / (rate / 100)), cc.max);
+        }
       });
       setSliderValues(sv);
+      setContributionValues(cv);
       setPhase("results");
     } catch (err) {
       console.error("=== QUALIFIED PLAN API FAILED ===", err);
@@ -1911,6 +2042,9 @@ Skip to building my plan
       income: incomeDisplay,
       dependents: String(dependents),
       state,
+      rawIncome: incomeNum,
+      marginalRate: incomeNum > 0 ? getMarginalRate(incomeNum, filingStatus || 'single') : 24,
+      filingStatusRaw: filingStatus,
     };
 
     // Pre-compute applicable MASTER_STRATEGIES — send full data to API
@@ -1998,10 +2132,17 @@ Skip to building my plan
       setPlanHistory(getPlanHistory());
 
       const sv: Record<number, number> = {};
-      (data.strategies as Strategy[]).forEach((s: Strategy, i: number) => {
+      const cv2: Record<number, number> = {};
+      sortedStrategies2.forEach((s: Strategy, i: number) => {
         sv[i] = s.estimatedSavings;
+        const cc = getContributionConfig(s, planResult.profile);
+        if (cc.isContribution && s.estimatedSavings > 0) {
+          const rate = planResult.profile.marginalRate || 24;
+          cv2[i] = Math.min(Math.round(s.estimatedSavings / (rate / 100)), cc.max);
+        }
       });
       setSliderValues(sv);
+      setContributionValues(cv2);
       setPhase("results");
     } catch (err) {
       console.error("=== SMART PLAN API FAILED ===", err);
@@ -2027,9 +2168,20 @@ Skip to building my plan
     setSliderValues((prev) => ({ ...prev, [index]: value }));
   };
 
+  /** Get effective savings for a strategy, accounting for contribution-based strategies */
+  const getEffectiveSavings = useCallback((idx: number, strategy: Strategy): number => {
+    if (!result) return 0;
+    const contribConfig = getContributionConfig(strategy, result.profile);
+    if (contribConfig.isContribution && contributionValues[idx] !== undefined) {
+      const rate = result.profile.marginalRate || 24;
+      return Math.round(contributionValues[idx] * rate / 100);
+    }
+    return sliderValues[idx] ?? strategy.estimatedSavings;
+  }, [result, contributionValues, sliderValues]);
+
   const computedTotal = result
     ? result.strategies.reduce(
-        (sum, s, i) => sum + (sliderValues[i] ?? s.estimatedSavings),
+        (sum, s, i) => sum + getEffectiveSavings(i, s),
         0
       )
     : 0;
@@ -2127,9 +2279,9 @@ Keep it concise but thorough. Use my actual income level in examples.`,
     const reportMarginalRate = qualSession.profile ? getMarginalRate(qualSession.profile.annualIncome, qualSession.profile.filingStatus) : 24;
     const actionableStrategies = result.strategies.filter(s => s.estimatedSavings > 0);
     const longTermStrategies = result.strategies.filter(s => s.estimatedSavings === 0);
-    const actionableTotal = actionableStrategies.reduce((sum, s, i) => {
+    const actionableTotal = actionableStrategies.reduce((sum, s) => {
       const idx = result.strategies.indexOf(s);
-      return sum + (sliderValues[idx] ?? s.estimatedSavings);
+      return sum + getEffectiveSavings(idx, s);
     }, 0);
 
     // Category icons for visual enhancement
@@ -2155,7 +2307,7 @@ Keep it concise but thorough. Use my actual income level in examples.`,
 
     // Build strategy detail pages
     const strategyPages = result.strategies.map((s, i) => {
-      const val = sliderValues[i] ?? s.estimatedSavings;
+      const val = getEffectiveSavings(i, s);
       const isLongTerm = s.estimatedSavings === 0;
       const catIcon = categoryIcons[s.category] || "&#128202;";
       const eligibilitySteps = s.implementationSteps?.slice(0, Math.ceil((s.implementationSteps?.length || 0) / 2)) || [];
@@ -2479,7 +2631,7 @@ Keep it concise but thorough. Use my actual income level in examples.`,
       <tr><th>#</th><th>Strategy</th><th>Category</th><th>Savings</th></tr>
       ${actionableStrategies.map((s, i) => {
         const idx = result.strategies.indexOf(s);
-        const val = sliderValues[idx] ?? s.estimatedSavings;
+        const val = getEffectiveSavings(idx, s);
         return `<tr class="data-row"><td>${i + 1}</td><td>${s.title}</td><td>${s.category}</td><td>${formatCurrency(val)}</td></tr>`;
       }).join("")}
       <tr class="total-row"><td colspan="3">Total Actionable Savings</td><td>${formatCurrency(actionableTotal)}</td></tr>
@@ -2535,7 +2687,7 @@ ${strategyPages}
     <table class="calc-table">
       <tr><th>Strategy</th><th>Category</th><th>Estimated Savings</th></tr>
       ${result.strategies.map((s, i) => {
-        const val = sliderValues[i] ?? s.estimatedSavings;
+        const val = getEffectiveSavings(i, s);
         const isLT = s.estimatedSavings === 0;
         return `<tr class="data-row${isLT ? " lt-row" : ""}"><td>${s.title}${s.ircReference ? ` <span style="color:#999;font-size:11px">(${s.ircReference})</span>` : ""}</td><td>${s.category}</td><td>${isLT ? "Long-Term" : formatCurrency(val)}</td></tr>`;
       }).join("")}
@@ -2686,7 +2838,7 @@ ${strategyPages}
       };
     }
     setIsGeneratingReport(false);
-  }, [result, sliderValues, computedTotal, qualSession]);
+  }, [result, sliderValues, contributionValues, computedTotal, qualSession, getEffectiveSavings]);
 
   /* ---------------------------------------------------------------- */
   /*  Render                                                           */
@@ -3672,6 +3824,7 @@ ${strategyPages}
                       }
                       setResult(null);
                       setSliderValues({});
+                      setContributionValues({});
                       setExpandedCards({});
                       setMessages([]);
                       setCoveredIntents([]);
@@ -3751,8 +3904,17 @@ ${strategyPages}
                               if (loaded.entityType) setSelectedEntity(loaded.entityType);
                               // Initialize slider values from saved strategy data
                               const sv: Record<number, number> = {};
-                              loaded.strategies.forEach((s, i) => { sv[i] = s.estimatedSavings; });
+                              const cvH: Record<number, number> = {};
+                              loaded.strategies.forEach((s, i) => {
+                                sv[i] = s.estimatedSavings;
+                                const cc = getContributionConfig(s as Strategy, loaded.profile);
+                                if (cc.isContribution && s.estimatedSavings > 0) {
+                                  const rate = (loaded.profile as PlanResult['profile']).marginalRate || 24;
+                                  cvH[i] = Math.min(Math.round(s.estimatedSavings / (rate / 100)), cc.max);
+                                }
+                              });
                               setSliderValues(sv);
+                              setContributionValues(cvH);
                               setExpandedCards({});
                             }
                             setShowPlanHistory(false);
@@ -3780,8 +3942,8 @@ ${strategyPages}
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto">
               <div className="max-w-5xl mx-auto px-4 pt-6 pb-6 animate-fade-in-up">
-            {/* Header Card */}
-            <div className="rounded-2xl bg-[rgba(31,31,37,0.6)] backdrop-blur-[16px] border border-white/5 p-6 mb-6">
+            {/* Header Card — sticky total savings */}
+            <div className="sticky top-0 z-20 rounded-2xl bg-[rgba(31,31,37,0.95)] backdrop-blur-[16px] border border-white/5 p-6 mb-6 shadow-lg shadow-black/20">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-[#FFB596]" />
                 <h1 className="text-lg font-semibold">
@@ -3897,8 +4059,9 @@ ${strategyPages}
                 const colors =
                   categoryColors[strategy.category] || categoryColors.Deductions;
                 const expanded = expandedCards[idx] ?? false;
-                const sliderVal = sliderValues[idx] ?? strategy.estimatedSavings;
                 const isLongTerm = strategy.estimatedSavings === 0;
+                const contribConfig = getContributionConfig(strategy, result.profile);
+                const effectiveSavings = getEffectiveSavings(idx, strategy);
 
                 // Find matching master strategy to link content
                 const masterMatch = MASTER_STRATEGIES.find((ms) => ms.title === strategy.title);
@@ -3934,6 +4097,11 @@ ${strategyPages}
                               Long-Term
                             </span>
                           )}
+                          {!isLongTerm && contribConfig.isContribution && (
+                            <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-[#DC5700]/10 text-[#FFB596]">
+                              Contribution-Based
+                            </span>
+                          )}
                         </div>
                         <h3 className="font-bold text-[#E4E1E9]">
                           {strategy.title}
@@ -3948,9 +4116,9 @@ ${strategyPages}
                         ) : (
                           <>
                             <p className="text-2xl font-bold text-[#FFB596]">
-                              {formatCurrency(sliderVal)}
+                              {formatCurrency(effectiveSavings)}
                             </p>
-                            <p className="text-xs text-[#C7C5D3]">estimated</p>
+                            <p className="text-xs text-[#C7C5D3]">tax savings</p>
                           </>
                         )}
                       </div>
@@ -3961,15 +4129,61 @@ ${strategyPages}
                       {strategy.description}
                     </p>
 
-                    {/* Slider — only for actionable strategies */}
-                    {!isLongTerm && (
+                    {/* Contribution slider for contribution-based strategies */}
+                    {!isLongTerm && contribConfig.isContribution && (() => {
+                      const rate = result.profile.marginalRate || 24;
+                      const contribVal = contributionValues[idx] ?? Math.min(Math.round(strategy.estimatedSavings / (rate / 100)), contribConfig.max);
+                      const computedSav = Math.round(contribVal * rate / 100);
+                      const step = contribConfig.max > 50000 ? 1000 : contribConfig.max > 10000 ? 500 : 100;
+                      return (
+                        <div className="mb-4 space-y-3">
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <label className="text-xs font-medium text-[#C7C5D3]">
+                                {contribConfig.label}: How much do you want to contribute?
+                              </label>
+                              <span className="text-sm font-bold text-[#E4E1E9]">
+                                {formatCurrency(contribVal)}
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              className="smart-plan-slider"
+                              min={0}
+                              max={contribConfig.max}
+                              step={step}
+                              value={contribVal}
+                              onChange={(e) => {
+                                const newContrib = Number(e.target.value);
+                                setContributionValues(prev => ({ ...prev, [idx]: newContrib }));
+                              }}
+                            />
+                            <div className="flex justify-between mt-1 text-xs text-[#C7C5D3]">
+                              <span>$0</span>
+                              <span>{formatCurrency(contribConfig.max)} max</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-500/5 border border-green-500/10">
+                            <span className="text-xs text-[#C7C5D3]">
+                              Estimated Tax Savings <span className="text-[10px] opacity-60">({rate}% marginal rate)</span>
+                            </span>
+                            <span className="text-sm font-bold text-green-400">
+                              {formatCurrency(computedSav)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Savings range slider for non-contribution strategies */}
+                    {!isLongTerm && !contribConfig.isContribution && (
                     <div className="mb-4">
                       <input
                         type="range"
                         className="smart-plan-slider"
                         min={strategy.savingsMin}
                         max={strategy.savingsMax}
-                        value={sliderVal}
+                        value={sliderValues[idx] ?? strategy.estimatedSavings}
                         onChange={(e) =>
                           handleSliderChange(idx, Number(e.target.value))
                         }

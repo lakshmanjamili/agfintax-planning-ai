@@ -185,27 +185,23 @@ function calcTraditional401k(
   profile: ClientProfileV2,
   marginalRate: number
 ): CalculatedSavings {
-  const age50 = answers['age-401k'] === 'yes';
+  const age50 = answers['age-401k'] === 'yes' || profile.age >= 50;
   const maxContribution = age50 ? 31000 : 23500;
   const isMFJ = profile.filingStatus === 'married_jointly';
   const currentContribution = parseAmount(answers['current-401k-contribution-amount']);
-  const currentBalance = parseAmount(answers['current-401k-balance']);
 
-  // Calculate the GAP: how much more they can contribute
-  // For MFJ: use single-earner gap as primary estimate (conservative)
-  // savingsMax assumes both spouses can contribute (best case)
-  const perPersonGap = Math.max(0, maxContribution - currentContribution);
-  // Conservative: only count single earner's gap for primary estimate
+  // If no current contribution info, assume contributing ~50% of max (conservative default)
+  const effectiveCurrent = currentContribution > 0 ? currentContribution : Math.round(maxContribution * 0.5);
+  const perPersonGap = Math.max(0, maxContribution - effectiveCurrent);
   const totalGap = perPersonGap;
   const totalMax = isMFJ ? perPersonGap * 2 : perPersonGap;
 
-  // Savings = additional contribution gap × marginal rate
   const savings = Math.round(totalGap * (marginalRate / 100));
-  const savingsMin = savings;
+  const savingsMin = Math.round(savings * 0.6);
   const savingsMax = Math.round(totalMax * (marginalRate / 100));
 
-  const calcText = currentContribution > 0
-    ? `$${maxContribution.toLocaleString()} max − $${currentContribution.toLocaleString()} current = $${totalGap.toLocaleString()} gap × ${marginalRate}% = $${savings.toLocaleString()}${isMFJ ? ' (per earner; up to $' + savingsMax.toLocaleString() + ' if both spouses contribute)' : ''}`
+  const calcText = effectiveCurrent > 0
+    ? `$${maxContribution.toLocaleString()} max − $${effectiveCurrent.toLocaleString()} current = $${totalGap.toLocaleString()} gap × ${marginalRate}% = $${savings.toLocaleString()}${isMFJ ? ' (per earner; up to $' + savingsMax.toLocaleString() + ' if both spouses contribute)' : ''}`
     : `$${maxContribution.toLocaleString()} max × ${marginalRate}% = $${savings.toLocaleString()}`;
 
   return {
@@ -214,7 +210,7 @@ function calcTraditional401k(
     savingsMin,
     savingsMax,
     calculation: calcText,
-    inputs: { maxContribution, currentContribution, totalGap, marginalRate, age50, isMFJ, currentBalance },
+    inputs: { maxContribution, currentContribution: effectiveCurrent, totalGap, marginalRate, age50, isMFJ },
   };
 }
 
@@ -312,9 +308,10 @@ function calcItemizedDeductions(
   profile: ClientProfileV2,
   marginalRate: number
 ): CalculatedSavings {
-  const saltAmount = parseAmount(answers['salt-amount']);
-  const mortgageInterest = parseAmount(answers['mortgage-interest-amount']);
-  const charityAmount = parseAmount(answers['annual-giving-amount']) || parseAmount(answers['annual-charity-amount']);
+  // Smart defaults for high-income profiles: estimate typical deduction amounts
+  const saltAmount = parseAmount(answers['salt-amount']) || (profile.annualIncome > 150000 ? Math.min(Math.round(profile.annualIncome * 0.04), 40000) : 0);
+  const mortgageInterest = parseAmount(answers['mortgage-interest-amount']) || (profile.annualIncome > 150000 ? Math.round(profile.annualIncome * 0.03) : 0);
+  const charityAmount = parseAmount(answers['annual-giving-amount']) || parseAmount(answers['annual-charity-amount']) || Math.round(profile.annualIncome * 0.02);
   const medicalExpenses = parseAmount(answers['anticipated-medical-expenses']);
 
   const medicalThreshold = Math.round(profile.annualIncome * 0.075);
@@ -343,7 +340,8 @@ function calcCharitableContribution(
   profile: ClientProfileV2,
   marginalRate: number
 ): CalculatedSavings {
-  const givingAmount = parseAmount(answers['annual-giving-amount']);
+  // Smart default: if no amount provided, estimate ~3% of income for charitable giving
+  const givingAmount = parseAmount(answers['annual-giving-amount']) || Math.round(profile.annualIncome * 0.03);
 
   // Check if they actually itemize — charitable deduction only helps if itemized > standard deduction
   const saltAmount = parseAmount(answers['salt-amount']);
@@ -383,7 +381,7 @@ function calcDonorAdvisedFund(
   profile: ClientProfileV2,
   marginalRate: number
 ): CalculatedSavings {
-  const annualCharity = parseAmount(answers['annual-charity-amount']) || parseAmount(answers['annual-giving-amount']);
+  const annualCharity = parseAmount(answers['annual-charity-amount']) || parseAmount(answers['annual-giving-amount']) || Math.round(profile.annualIncome * 0.03);
   const initialContribution = parseAmount(answers['initial-daf-contribution']);
 
   const bunchingYears = 2;
@@ -507,7 +505,8 @@ function calcSelfEmployedHealthInsurance(
   _profile: ClientProfileV2,
   marginalRate: number
 ): CalculatedSavings {
-  const premiums = parseAmount(answers['premium-expense-se']);
+  // Smart default: $12,000/yr avg health insurance premium for self-employed
+  const premiums = parseAmount(answers['premium-expense-se']) || 12000;
   const savings = Math.round(premiums * (marginalRate / 100));
 
   return {
@@ -636,10 +635,11 @@ function calcSolo401k(
 
 function calcDeferredCompensation(
   answers: Record<string, string>,
-  _profile: ClientProfileV2,
+  profile: ClientProfileV2,
   marginalRate: number
 ): CalculatedSavings {
-  const deferredAmount = parseAmount(answers['annual-deferral-amount']);
+  // Smart default: estimate ~10% of income for deferral if no amount provided
+  const deferredAmount = parseAmount(answers['annual-deferral-amount']) || Math.round(profile.annualIncome * 0.10);
   const savings = Math.round(deferredAmount * (marginalRate / 100));
   return {
     strategyId: 'deferred-compensation-individual',
